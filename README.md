@@ -4,6 +4,8 @@ Work-in-progress.
 
 `reddit_bestof` is a python tool used to generate the reports at **/r/BestOfFrance2**.
 
+It is intended to be run every day at 9 pm. It will extract the activity of the subreddit for the last day and create a report from it.
+
 It is designed to be as generic as possible.
 
 ## Configuration
@@ -84,5 +86,6 @@ systemctl --user start reddit_bestof
 ## TODO
 
 - filter out deleted/hidden posts/comments
-- filter out quotes in comment's body
 - add records for each category
+- add gilded comments
+- convert to script to use a stream?

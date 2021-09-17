@@ -11,6 +11,7 @@ import locale
 import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
+from tqdm import tqdm
 from . import stats
 
 logger = logging.getLogger()
@@ -60,16 +61,14 @@ def get_bestof_timestamp(day: str) -> (int, int):
     """
     y, m, d = [int(x) for x in day.split("-", 3)]
     # needs to add 2 hours in order to have timestamp equivalent to the FR timezone.
-    # return int(datetime(y - 1, m, d, 22, 00).timestamp()), int(
-    #     datetime(y - 1, m, d, 23, 00).timestamp()
-    # )
-    min_datetime = datetime(y, m, d, 23, 00) - timedelta(days=1)
+    min_datetime = datetime(y, m, d, 23, 00) - timedelta(hours=24)
     return int(min_datetime.timestamp()), int(datetime(y, m, d, 23, 00).timestamp())
 
 
 def get_post_data(reddit, post_ids: list) -> list:
     posts = []
-    for id in post_ids:
+    logger.info("Extracting posts")
+    for id in tqdm(post_ids, dynamic_ncols=True):
         submission = reddit.submission(id)
         author = str(submission.author)
         if author != "None" and not submission.hidden and submission.is_robot_indexable:
@@ -86,19 +85,21 @@ def get_post_data(reddit, post_ids: list) -> list:
 
 def get_comment_data(reddit, comment_ids: list) -> list:
     comments = []
-    for id in comment_ids:
+    logger.info("Extracting comments")
+    for id in tqdm(comment_ids, dynamic_ncols=True):
         comment = reddit.comment(id)
         author = str(comment.author)
         if author != "None":
+            body = stats.sanitize_comment_body(comment.body)
             comments.append(
                 {
                     "id": comment.id,
                     "score": comment.score,
                     "author": author,
                     "permalink": f"https://reddit.com{comment.permalink}",
-                    "body": comment.body,
+                    "body": body,
                     "parent": comment.parent_id,
-                    "length": len(comment.body),
+                    "length": len(body),
                 }
             )
     return comments
@@ -196,7 +197,7 @@ def format_report(reddit, template: str, df_posts: list, df_comments: list) -> s
     krach_author, krach_score = stats.get_krach(df_comments)
 
     formatted_message = eval(template)
-    return formatted_message, best_post_title
+    return formatted_message, best_comment_body
 
 
 def read_template(file: str) -> str:
