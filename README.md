@@ -2,11 +2,13 @@
 
 Work-in-progress.
 
-`reddit_bestof` is a python tool generating the reports at */r/BestOfFrance2*. It is designed to be as generic as possible, so feel free to use it.
+`reddit_bestof` is a python tool used to generate the reports at **/r/BestOfFrance2**.
+
+It is designed to be as generic as possible.
 
 ## Configuration
 
-Rename `praw_sample.ini` to `praw.ini` and enter your informations in it (create a developer script at https://old.reddit.com/prefs/apps/).
+Rename `praw_sample.ini` to `praw.ini` and put your informations in it. You can create an API dev script at https://old.reddit.com/prefs/apps/.
 
 ## Installation
 
@@ -56,15 +58,17 @@ optional arguments:
   --no_posting          Disable posting to Reddit.
 ```
 
+### Example
+
 ```
-reddit_bestof -s france -d "2021-09-16" -p bestoffrance2
+reddit_bestof -s france -d "2021-09-16" -p bestoffrance2 -f template_bestoffrance.txt -t template_bestoffrance_title.txt
 ```
 
 ### Templates
 
 The script uses two templates: one for the post content, the other for the post title.
 
-See `template_bestoffrance.txt` and `template_bestoffrance_title.txt` for an example.
+See `template_bestoffrance.txt` and `template_bestoffrance_title.txt` for examples.
 
 ## Systemd-service
 
@@ -74,7 +78,7 @@ You can schedule the script to run every day at a certain time (by default 21:00
 cp systemd-service/* ~/.config/systemd/user
 systemctl --user daemon-reload
 systemctl --user enable --now reddit_bestof.timer
-systemctl --user start reddit_best
+systemctl --user start reddit_bestof
 ```
 
 ## TODO
