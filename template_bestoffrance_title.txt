@@ -1,0 +1,3 @@
+f"""
+[BestOf] du {date} : {title}
+"""

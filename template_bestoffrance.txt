@@ -1,0 +1,45 @@
+f"""
+##Total {number_total_posts} posts, {number_total_comments} commentaires, {number_unique_users} participants
+
+---
+
+## *Meilleur post*
+
+par {best_post_author} avec **{best_post_score} points**
+
+> [{best_post_title}]({best_post_link})
+
+## *Meilleur commentaire*
+
+par {best_comment_author} avec **{best_comment_score} points**
+
+> [{best_comment_body}]({best_comment_link})
+
+## *Pire commentaire*
+
+par {worst_comment_author} avec **{worst_comment_score} points**
+
+> [{worst_comment_body}](({worst_comment_link})
+
+## *Commentaire le plus discuté*
+
+par {discussed_comment_author} avec **{discussed_comment_answers} réponses**
+
+> [{discussed_comment_body}]({discussed_comment_link})
+
+
+
+## *Stats utilisateurs*
+
+* Ouh les amoureux: {amoureux_author1} et {amoureux_author2} se sont échangés **{amoureux_score}** doux messages aujourd'hui !
+* Prix Qualité : {qualite_author}, qui a atteint **{qualite_score}** milliSPHKS.
+* Prix POC (postage obsessionnel compulsif) : {poc_author} avec **{poc_score}** commentaires
+* Prix de la tartine de texte : {tartine_author} avec un total de **{tartine_score}** caractères tapés
+* Prix 'MON CAPS LOCK EST CASSE': {capslock_author} qui a gueulé, en tout, sur **{capslock_score}** caractères
+* Prix de l'indécision : {indecision_author} avec **{indecision_score}** questions
+* Karma-Jackpot : {jackpot_author} avec + **{jackpot_score}** points!
+* Karma-Krach : {krach_author} avec **{krach_score}** points!
+
+---
+^^reddit_bestof ^^[v0.1](https://www.github.com/dbeley/reddit_bestof) ^^maintenu ^^par ^^/u/bloub-bloub, ^^idée ^^originale ^^de ^^/u/mudpizza
+"""
