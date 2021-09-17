@@ -84,5 +84,5 @@ systemctl --user start reddit_bestof
 ## TODO
 
 - filter out deleted/hidden posts/comments
-- fix most_discussed stat
-- implement amoureux stat
+- filter out quotes in comment's body
+- add records for each category

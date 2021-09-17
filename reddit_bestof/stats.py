@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 
@@ -39,24 +40,48 @@ def get_worst_comment(df_comments):
     )
 
 
-def get_discussed_comment(df_comments):
+def get_discussed_comment(reddit, df_comments):
     subset = df_comments[df_comments.parent.str.startswith("t1_")][
         "parent"
     ].value_counts()
     discussed_comment_answers = subset[0]
     discussed_parent_id = subset.idxmax().split("_")[-1]
     discussed_comment = df_comments[df_comments["id"] == discussed_parent_id]
-    breakpoint()
-    return (
-        "/u/" + discussed_comment["author"],
-        discussed_comment_answers,
-        sanitize_long_text(discussed_comment["body"]),
-        discussed_comment["permalink"],
-    )
+    if not discussed_comment.empty:
+        return (
+            "/u/" + discussed_comment["author"],
+            discussed_comment_answers,
+            sanitize_long_text(discussed_comment["body"]),
+            discussed_comment["permalink"],
+        )
+    else:
+        logger.warning(
+            "Most discussed comment is not in df_comments. Extracting it separately."
+        )
+        comment = reddit.comment(discussed_parent_id)
+        comment.refresh()
+        return (
+            "/u/" + str(comment.author),
+            len(comment.replies),
+            sanitize_long_text(comment.body),
+            f"https://reddit.com{comment.permalink}",
+        )
 
 
 def get_amoureux(df_comments):
-    return "amoureux1", "amoureux2", "score"
+    # filter comments answering to another comment
+    subset = df_comments[df_comments.parent.str.startswith("t1_")]
+    subset["parent_id"] = subset["parent"].str.split("_").str[-1]
+    subset2 = subset.set_index("id").join(subset.set_index("parent_id"), rsuffix="_new")
+    subset3 = (
+        subset2[subset2.author_new.notnull()][["author", "author_new"]]
+        .apply(Counter, axis="columns")
+        .value_counts()
+    )
+    score = subset3[0]
+    authors = [x for x, y in subset3.index[0].items()]
+    breakpoint()
+    return "/u/" + authors[0], "/u/" + authors[1], score
 
 
 def get_qualite(df_comments):
@@ -64,7 +89,6 @@ def get_qualite(df_comments):
     Le prix qualité récompense le participant qui a le meilleur rapport "karma par caractère tapés".
     Pour prétendre à ce titre, il faut avoir contribué au moins 140 caractères dans la journée.
     Le score est mesuré en milliSPHKS en l'honneur de /u/sphks qui a suggéré cette fonctionnalité (1 SPHKS = 1 point de karma par caractère)."""
-    # TODO group the 4 groupby functions into one
     subset = df_comments.groupby(["author"]).sum()
     subset2 = subset[subset.length > 140]
     subset2["milliSPHKS"] = subset2["score"] / subset2["length"] * 1000

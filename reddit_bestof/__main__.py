@@ -9,43 +9,49 @@ import praw
 import json
 import locale
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from . import stats
 
 logger = logging.getLogger()
 logging.getLogger("praw").setLevel(logging.WARNING)
 START_TIME = time.time()
+VALID_PUSHSHIFT_TYPES = ["submission", "comment"]
 
 
-def get_pushshift_posts(sub: str, min_timestamp: int, max_timestamp: int) -> list:
-    url = (
-        "https://api.pushshift.io/reddit/search/submission?&size=1000"
-        + "&subreddit="
-        + str(sub)
-        + "&after="
-        + str(min_timestamp)
-        + "&before="
-        + str(max_timestamp)
-    )
-    req = requests.get(url)
-    data = json.loads(req.text)
+def get_pushshift_data(
+    type: str, sub: str, min_timestamp: int, max_timestamp: int
+) -> list:
+    if type not in VALID_PUSHSHIFT_TYPES:
+        raise ValueError(
+            f"{type} is not a valid pushshift type. Valid values = {VALID_PUSHSHIFT_TYPES}."
+        )
+    url = f"https://api.pushshift.io/reddit/search/{type}?&size=1000&subreddit={sub}&after={min_timestamp}&before={max_timestamp}"
+    iter = 0
+    while True:
+        iter += 1
+        time.sleep(3)
+        req = requests.get(url)
+        if req.status_code != 502 or iter > 5:
+            break
+    try:
+        data = json.loads(req.text)
+    except Exception as e:
+        logger.error(e)
     return data["data"]
 
 
-def get_pushshift_comments(sub: str, min_timestamp: int, max_timestamp: int) -> list:
-    url = (
-        "https://api.pushshift.io/reddit/search/comment?&size=1000"
-        + "&subreddit="
-        + str(sub)
-        + "&after="
-        + str(min_timestamp)
-        + "&before="
-        + str(max_timestamp)
-    )
-    req = requests.get(url)
-    data = json.loads(req.text)
-    return data["data"]
+def get_pushshift_ids(
+    type: str, sub: str, min_timestamp: int, max_timestamp: int
+) -> list:
+    list_ids = []
+    ids = get_pushshift_data(type, sub, min_timestamp, max_timestamp)
+    while len(ids) > 0:
+        for id in ids:
+            list_ids.append(id["id"])
+        logger.debug(f"New min timestamp = {ids[-1]['created_utc']}.")
+        ids = get_pushshift_data(type, sub, ids[-1]["created_utc"], max_timestamp)
+    return list_ids
 
 
 def get_bestof_timestamp(day: str) -> (int, int):
@@ -54,12 +60,11 @@ def get_bestof_timestamp(day: str) -> (int, int):
     """
     y, m, d = [int(x) for x in day.split("-", 3)]
     # needs to add 2 hours in order to have timestamp equivalent to the FR timezone.
-    return int(datetime(y - 1, m, d, 22, 00).timestamp()), int(
-        datetime(y - 1, m, d, 23, 00).timestamp()
-    )
-    # return int(datetime(y, m, d - 1, 23, 00).timestamp()), int(
-    #     datetime(y, m, d, 23, 00).timestamp()
+    # return int(datetime(y - 1, m, d, 22, 00).timestamp()), int(
+    #     datetime(y - 1, m, d, 23, 00).timestamp()
     # )
+    min_datetime = datetime(y, m, d, 23, 00) - timedelta(days=1)
+    return int(min_datetime.timestamp()), int(datetime(y, m, d, 23, 00).timestamp())
 
 
 def get_post_data(reddit, post_ids: list) -> list:
@@ -67,15 +72,13 @@ def get_post_data(reddit, post_ids: list) -> list:
     for id in post_ids:
         submission = reddit.submission(id)
         author = str(submission.author)
-        if author != "None":
+        if author != "None" and not submission.hidden and submission.is_robot_indexable:
             posts.append(
                 {
                     "score": submission.score,
                     "author": author,
                     "permalink": f"https://reddit.com{submission.permalink}",
                     "title": submission.title,
-                    # "Hidden": submission.hidden,
-                    # "Archived": submission.archived,
                 }
             )
     return posts
@@ -113,7 +116,7 @@ def format_title(template: str, title: str, day: str) -> str:
     return eval(template)
 
 
-def format_report(template: str, post_data: list, comment_data: list) -> str:
+def format_report(reddit, template: str, df_posts: list, df_comments: list) -> str:
     """Create stats from post_data and comment_data.
     Replace variables in template
     Available tokens:
@@ -154,11 +157,8 @@ def format_report(template: str, post_data: list, comment_data: list) -> str:
     - krach_author
     - krach_score
     """
-    number_total_posts = len(post_data)
-    number_total_comments = len(comment_data)
-
-    df_posts = pd.DataFrame(post_data)
-    df_comments = pd.DataFrame(comment_data)
+    number_total_posts = len(df_posts)
+    number_total_comments = len(df_comments)
     number_unique_users = len(
         pd.unique(df_posts["author"].append(df_comments["author"], ignore_index=True))
     )
@@ -185,7 +185,7 @@ def format_report(template: str, post_data: list, comment_data: list) -> str:
         discussed_comment_answers,
         discussed_comment_body,
         discussed_comment_link,
-    ) = stats.get_discussed_comment(df_comments)
+    ) = stats.get_discussed_comment(reddit, df_comments)
     amoureux_author1, amoureux_author2, amoureux_score = stats.get_amoureux(df_comments)
     qualite_author, qualite_score = stats.get_qualite(df_comments)
     poc_author, poc_score = stats.get_poc(df_comments)
@@ -221,34 +221,37 @@ def main():
     template = read_template(args.template_file)
     template_title = read_template(args.template_file_title)
 
-    post_ids = []
-    posts = get_pushshift_posts(args.report_subreddit, min_timestamp, max_timestamp)
-    while len(posts) > 0:
-        for submission in posts:
-            post_ids.append(submission["id"])
-        logger.debug(f"Post timestamp = {posts[-1]['created_utc']}")
-        posts = get_pushshift_posts(
-            args.report_subreddit, posts[-1]["created_utc"], max_timestamp
-        )
-    comment_ids = []
-    comments = get_pushshift_comments(
-        args.report_subreddit, min_timestamp, max_timestamp
+    # Extract ids with pushshift
+    post_ids = get_pushshift_ids(
+        "submission", args.report_subreddit, min_timestamp, max_timestamp
     )
-    while len(comments) > 0:
-        for submission in comments:
-            comment_ids.append(submission["id"])
-        logger.debug(f"Comment timestamp = {comments[-1]['created_utc']}")
-        comments = get_pushshift_comments(
-            args.report_subreddit, comments[-1]["created_utc"], max_timestamp
-        )
+    comment_ids = get_pushshift_ids(
+        "comment", args.report_subreddit, min_timestamp, max_timestamp
+    )
+    if len(post_ids) == 0:
+        raise ValueError("post_ids is empty.")
+    if len(comment_ids) == 0:
+        raise ValueError("comment_ids is empty.")
     logger.debug(
         f"Successfully extracted {len(post_ids)} post IDs and {len(comment_ids)} comment IDs for day {report_day}."
     )
 
+    # Extract current data with praw
     post_data = get_post_data(reddit, post_ids)
     comment_data = get_comment_data(reddit, comment_ids)
-    formatted_message, title = format_report(template, post_data, comment_data)
-    breakpoint()
+
+    # Convert to pandas dataframe
+    df_posts = pd.DataFrame(post_data)
+    df_comments = pd.DataFrame(comment_data)
+
+    # Stats calculation + template evaluation
+    formatted_message, title = format_report(reddit, template, df_posts, df_comments)
+
+    filename = f"{report_day}_{args.report_subreddit}_{int(START_TIME)}.txt"
+    logger.info(f"Exporting formatted post to Exports/{filename}")
+    Path("Exports").mkdir(parents=True, exist_ok=True)
+    with open(f"Exports/{filename}", "w") as f:
+        f.write(formatted_message)
 
     post_title = format_title(template_title, title, report_day)
     if args.no_posting:
@@ -263,7 +266,9 @@ def main():
         logger.info(
             f"Sending post to {args.post_subreddit}. Title: {post_title}. Content: {formatted_message}."
         )
-        reddit.subreddit(args.post_subreddit).submit(title=post_title)
+        reddit.subreddit(args.post_subreddit).submit(
+            title=post_title, selftext=formatted_message
+        )
 
     logger.info("Runtime: %.2f seconds." % (time.time() - START_TIME))
 
@@ -283,39 +288,39 @@ def parse_args():
     parser.add_argument(
         "-s",
         "--report_subreddit",
-        help="Subreddit (required, without prefix, example: france).",
+        help="Subreddit (required, without prefix, example: france)",
         type=str,
         required=True,
     )
     parser.add_argument(
         "-f",
         "--template_file",
-        help="Template file containing the content of the post (required).",
+        help="Template file containing the content of the post (required)",
         type=str,
         required=True,
     )
     parser.add_argument(
         "-t",
         "--template_file_title",
-        help="Template file containing the title of the post (required).",
+        help="Template file containing the title of the post (required)",
         type=str,
         required=True,
     )
     parser.add_argument(
         "-d",
         "--day",
-        help="Report day in format YYYY-MM-DD (default: current day).",
+        help="Report day in format YYYY-MM-DD (default: current day)",
         type=str,
     )
     parser.add_argument(
         "-p",
         "--post_subreddit",
-        help="Subreddit to send the formatted message to (without prefix, example: bestoffrance2).",
+        help="Subreddit to send the formatted message to (without prefix, example: bestoffrance2)",
         type=str,
     )
     parser.add_argument(
         "--no_posting",
-        help="Disable posting to Reddit.",
+        help="Disable posting to Reddit",
         dest="no_posting",
         action="store_true",
     )

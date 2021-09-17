@@ -2,3 +2,4 @@ praw.ini
 *.egg-info/
 .venv/
 __pycache__/
+Exports/
