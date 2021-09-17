@@ -6,8 +6,6 @@ logger = logging.getLogger(__name__)
 
 def sanitize_comment_body(body: str) -> str:
     result = " ".join([x for x in body.split("\n") if not x.startswith(">")]).strip()
-    # if len(body) > 100 and ">" in body:
-    #     breakpoint()
     return result
 
 
@@ -96,7 +94,6 @@ def get_amoureux(df_comments):
     )
     score = subset3[0]
     authors = [x for x, y in subset3.index[0].items()]
-    breakpoint()
     return (
         sanitize_username("/u/" + authors[0]),
         sanitize_username("/u/" + authors[1]),
