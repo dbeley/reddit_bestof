@@ -85,25 +85,27 @@ def get_post_data(reddit, post_ids: list) -> list:
     return posts
 
 
-def get_comment_data(reddit, comment_ids: list) -> list:
+def get_comment_data(reddit, post_ids: list) -> list:
     comments = []
     logger.info("Extracting comments")
-    for id in tqdm(comment_ids, dynamic_ncols=True):
-        comment = reddit.comment(id)
-        author = str(comment.author)
-        if author != "None":
-            body = stats.sanitize_comment_body(comment.body)
-            comments.append(
-                {
-                    "id": comment.id,
-                    "score": comment.score,
-                    "author": author,
-                    "permalink": f"https://reddit.com{comment.permalink}",
-                    "body": body,
-                    "parent": comment.parent_id,
-                    "length": len(body),
-                }
-            )
+    for id in tqdm(post_ids, dynamic_ncols=True):
+        submission = reddit.submission(id)
+        submission.comments.replace_more(limit=None)
+        for comment in submission.comments.list():
+            author = str(comment.author)
+            if author != "None":
+                body = stats.sanitize_comment_body(comment.body)
+                comments.append(
+                    {
+                        "id": comment.id,
+                        "score": comment.score,
+                        "author": author,
+                        "permalink": f"https://reddit.com{comment.permalink}",
+                        "body": body,
+                        "parent": comment.parent_id,
+                        "length": len(body),
+                    }
+                )
     return comments
 
 
@@ -222,6 +224,8 @@ def main():
     # to_string() uses this option to truncate its output
     pd.options.display.max_colwidth = None
 
+    breakpoint()
+
     report_day = datetime.now().strftime("%Y-%m-%d") if not args.day else args.day
     logger.info(
         f"Creating report for subreddit {args.report_subreddit} and day {report_day}."
@@ -229,24 +233,16 @@ def main():
     min_timestamp, max_timestamp = get_timestamp_range(report_day)
     logger.debug(f"Extracting data between {min_timestamp} and {max_timestamp}.")
 
-    # Extract ids with pushshift
+    # Extract post ids with pushshift
     post_ids = get_pushshift_ids(
         "submission", args.report_subreddit, min_timestamp, max_timestamp, args.test
     )
-    comment_ids = get_pushshift_ids(
-        "comment", args.report_subreddit, min_timestamp, max_timestamp, args.test
-    )
     if len(post_ids) == 0:
         raise ValueError("post_ids is empty.")
-    if len(comment_ids) == 0:
-        raise ValueError("comment_ids is empty.")
-    logger.debug(
-        f"Successfully extracted {len(post_ids)} post IDs and {len(comment_ids)} comment IDs for day {report_day}."
-    )
 
     # Extract current data with praw
     post_data = get_post_data(reddit, post_ids)
-    comment_data = get_comment_data(reddit, comment_ids)
+    comment_data = get_comment_data(reddit, post_ids)
 
     # Convert to pandas dataframe
     df_posts = pd.DataFrame(post_data)
