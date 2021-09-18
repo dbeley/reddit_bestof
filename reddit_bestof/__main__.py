@@ -115,7 +115,7 @@ def redditconnect(config_section: str):
 
 def format_title(template: str, title: str, day: str) -> str:
     y, m, d = [int(x) for x in day.split("-", 3)]
-    date = datetime(y, m, d).strftime("%A %d %b. %Y")
+    date = datetime(y, m, d).strftime("%A %d %b %Y")
     return eval(template)
 
 
@@ -212,6 +212,10 @@ def read_template(file: str) -> str:
 
 def main():
     args = parse_args()
+
+    if not args.post_subreddit and not args.no_posting:
+        logger.info(f"Post Subreddit not set (use the -p argument).")
+
     reddit = redditconnect("bot")
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
     # to_string() uses this option to truncate its output
@@ -260,20 +264,16 @@ def main():
         f.write(formatted_message)
 
     post_title = format_title(template_title, title, report_day)
-    if args.no_posting:
-        logger.info(
-            f"Posting is disabled. Title: {post_title}. Content: {formatted_message}."
-        )
-    elif not args.post_subreddit:
-        logger.info(
-            f"Post Subreddit not set (use the -p argument). Title: {post_title}. Content: {formatted_message}."
-        )
-    else:
+    if not args.no_posting:
         logger.info(
             f"Sending post to {args.post_subreddit}. Title: {post_title}. Content: {formatted_message}."
         )
         reddit.subreddit(args.post_subreddit).submit(
             title=post_title, selftext=formatted_message
+        )
+    else:
+        logger.info(
+            f"Posting is disabled. Title: {post_title}. Content: {formatted_message}."
         )
 
     logger.info("Runtime: %.2f seconds." % (time.time() - START_TIME))

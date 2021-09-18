@@ -13,7 +13,7 @@ def sanitize_long_text(text: str) -> str:
     text = text.replace("\n", "")
     max_length = 150
     if len(text) >= max_length:
-        return " ".join(text[0 : max_length - 1].split(" ")[0:-1]) + "…"
+        return text[0 : max_length - 1].rsplit(" ", 1)[0] + "…"
     return text
 
 
