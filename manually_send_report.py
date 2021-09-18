@@ -34,7 +34,7 @@ def format_title(formatted_message: str, filename: str) -> str:
     day = Path(filename).stem.split("_")[0]
     y, m, d = [int(x) for x in day.split("-", 3)]
     date = datetime(y, m, d).strftime("%A %d %b %Y")
-    best_comment = formatted_message.split("##")[2].split("[")[1].split("]")[0]
+    best_comment = formatted_message.split("##")[3].split("[")[1].split("]")[0]
     formatted_title = f"[BestOf] du {date} : {best_comment}"
     return formatted_title
 

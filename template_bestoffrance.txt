@@ -30,11 +30,11 @@ par {discussed_comment_author} avec **{discussed_comment_answers} réponses**
 
 ## *Stats utilisateurs*
 
-* Ouh les amoureux: {amoureux_author1} et {amoureux_author2} se sont échangés **{amoureux_score}** doux messages aujourd'hui !
+* Ouh les amoureux : {amoureux_author1} et {amoureux_author2} se sont échangés **{amoureux_score}** doux messages aujourd'hui !
 * Prix Qualité : {qualite_author}, qui a atteint **{qualite_score}** milliSPHKS.
 * Prix POC (postage obsessionnel compulsif) : {poc_author} avec **{poc_score}** commentaires
 * Prix de la tartine de texte : {tartine_author} avec un total de **{tartine_score}** caractères tapés
-* Prix 'MON CAPS LOCK EST CASSE': {capslock_author} qui a gueulé, en tout, sur **{capslock_score}** caractères
+* Prix 'MON CAPS LOCK EST CASSE' : {capslock_author} qui a gueulé, en tout, sur **{capslock_score}** caractères
 * Prix de l'indécision : {indecision_author} avec **{indecision_score}** questions
 * Karma-Jackpot : {jackpot_author} avec + **{jackpot_score}** points!
 * Karma-Krach : {krach_author} avec **{krach_score}** points!
