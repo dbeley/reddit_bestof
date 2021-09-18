@@ -18,7 +18,7 @@ par {best_comment_author} avec **{best_comment_score} points**
 
 par {worst_comment_author} avec **{worst_comment_score} points**
 
-> [{worst_comment_body}](({worst_comment_link})
+> [{worst_comment_body}]({worst_comment_link})
 
 ## *Commentaire le plus discuté*
 

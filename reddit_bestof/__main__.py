@@ -57,7 +57,7 @@ def get_pushshift_ids(
     return list_ids
 
 
-def get_bestof_timestamp(day: str) -> (int, int):
+def get_timestamp_range(day: str) -> (int, int):
     """Return the range of the report with a min and max timestamp.
     Example: for 2021-09-16, return the timestamp for 2021-09-15 21:00 and 2021-09-16 21:00
     """
@@ -203,8 +203,6 @@ def format_report(reddit, template: str, df_posts: list, df_comments: list) -> s
 
 
 def read_template(file: str) -> str:
-    if not Path(file).is_file():
-        raise ValueError(f"File {file} does not exist.")
     with open(file, "r") as f:
         content = f.read()
     return content
@@ -212,24 +210,24 @@ def read_template(file: str) -> str:
 
 def main():
     args = parse_args()
-
     if not args.post_subreddit and not args.no_posting:
-        logger.info(f"Post Subreddit not set (use the -p argument).")
+        raise ValueError("Post Subreddit not set (use the -p argument).")
+    if not Path(args.template_file).is_file():
+        raise ValueError(f"File {args.template_file} does not exist.")
+    if not Path(args.template_file_title).is_file():
+        raise ValueError(f"File {args.template_file_title} does not exist.")
 
     reddit = redditconnect("bot")
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
     # to_string() uses this option to truncate its output
     pd.options.display.max_colwidth = None
-    # pd.options.mode.chained_assignment = "raise"
+
     report_day = datetime.now().strftime("%Y-%m-%d") if not args.day else args.day
     logger.info(
         f"Creating report for subreddit {args.report_subreddit} and day {report_day}."
     )
-    min_timestamp, max_timestamp = get_bestof_timestamp(report_day)
+    min_timestamp, max_timestamp = get_timestamp_range(report_day)
     logger.debug(f"Extracting data between {min_timestamp} and {max_timestamp}.")
-
-    template = read_template(args.template_file)
-    template_title = read_template(args.template_file_title)
 
     # Extract ids with pushshift
     post_ids = get_pushshift_ids(
@@ -255,6 +253,7 @@ def main():
     df_comments = pd.DataFrame(comment_data)
 
     # Stats calculation + template evaluation
+    template = read_template(args.template_file)
     formatted_message, title = format_report(reddit, template, df_posts, df_comments)
 
     filename = f"{report_day}_{args.report_subreddit}_{int(START_TIME)}.txt"
@@ -263,6 +262,7 @@ def main():
     with open(f"Exports/{filename}", "w") as f:
         f.write(formatted_message)
 
+    template_title = read_template(args.template_file_title)
     post_title = format_title(template_title, title, report_day)
     if not args.no_posting:
         logger.info(
