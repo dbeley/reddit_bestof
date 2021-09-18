@@ -1,4 +1,6 @@
 import logging
+import praw
+import pandas as pd
 from collections import Counter
 
 logger = logging.getLogger(__name__)
@@ -24,7 +26,7 @@ def sanitize_username(username: str) -> str:
         return username
 
 
-def get_best_post(df_posts):
+def get_best_post(df_posts: pd.DataFrame) -> (str, str, str, str):
     best_post = df_posts.loc[df_posts["score"].idxmax()]
     return (
         sanitize_username("/u/" + str(best_post["author"])),
@@ -34,7 +36,7 @@ def get_best_post(df_posts):
     )
 
 
-def get_best_comment(df_comments):
+def get_best_comment(df_comments: pd.DataFrame) -> (str, str, str, str):
     best_comment = df_comments.loc[df_comments["score"].idxmax()]
     return (
         sanitize_username("/u/" + str(best_comment["author"])),
@@ -44,7 +46,7 @@ def get_best_comment(df_comments):
     )
 
 
-def get_worst_comment(df_comments):
+def get_worst_comment(df_comments: pd.DataFrame) -> (str, str, str, str):
     worst_comment = df_comments.loc[df_comments["score"].idxmin()]
     return (
         sanitize_username("/u/" + str(worst_comment["author"])),
@@ -54,7 +56,9 @@ def get_worst_comment(df_comments):
     )
 
 
-def get_discussed_comment(reddit, df_comments):
+def get_discussed_comment(
+    reddit: praw.Reddit, df_comments: pd.DataFrame
+) -> (str, str, str, str):
     subset = df_comments[df_comments.parent.str.startswith("t1_")][
         "parent"
     ].value_counts()
@@ -84,7 +88,7 @@ def get_discussed_comment(reddit, df_comments):
         )
 
 
-def get_amoureux(df_comments):
+def get_amoureux(df_comments: pd.DataFrame) -> (str, str, str):
     # filter comments answering to another comment
     subset = df_comments[df_comments.parent.str.startswith("t1_")]
     subset.loc[:, "parent_id"] = subset.parent.str.split("_").str[-1]
@@ -103,7 +107,7 @@ def get_amoureux(df_comments):
     )
 
 
-def get_qualite(df_comments):
+def get_qualite(df_comments: pd.DataFrame) -> (str, str):
     """From : https://www.reddit.com/r/BestOfFrance/wiki/index
     Le prix qualité récompense le participant qui a le meilleur rapport "karma par caractère tapés".
     Pour prétendre à ce titre, il faut avoir contribué au moins 140 caractères dans la journée.
@@ -117,35 +121,35 @@ def get_qualite(df_comments):
     )
 
 
-def get_poc(df_comments):
+def get_poc(df_comments: pd.DataFrame) -> (str, str):
     poc = df_comments["author"].value_counts()
     return sanitize_username("/u/" + str(poc.idxmax())), poc[0]
 
 
-def get_tartine(df_comments):
+def get_tartine(df_comments: pd.DataFrame) -> (str, str):
     subset = df_comments.groupby(["author"]).sum()["length"]
     return sanitize_username("/u/" + str(subset.idxmax())), subset[subset.idxmax()]
 
 
-def get_capslock(df_comments):
+def get_capslock(df_comments: pd.DataFrame) -> (str, str):
     subset = df_comments
     subset["capslock"] = subset["body"].str.count(r"[A-Z]")
     subset2 = subset.groupby("author").sum()["capslock"]
     return sanitize_username("/u/" + str(subset2.idxmax())), subset2[subset2.idxmax()]
 
 
-def get_indecision(df_comments):
+def get_indecision(df_comments: pd.DataFrame) -> (str, str):
     subset = df_comments
     subset["question"] = subset["body"].str.count(r"[?]")
     subset2 = subset.groupby("author").sum()["question"]
     return sanitize_username("/u/" + str(subset2.idxmax())), subset2[subset2.idxmax()]
 
 
-def get_jackpot(df_comments):
+def get_jackpot(df_comments: pd.DataFrame) -> (str, str):
     subset = df_comments.groupby(["author"]).sum()["score"]
     return sanitize_username("/u/" + str(subset.idxmax())), subset[subset.idxmax()]
 
 
-def get_krach(df_comments):
+def get_krach(df_comments: pd.DataFrame) -> (str, str):
     subset = df_comments.groupby(["author"]).sum()["score"]
     return sanitize_username("/u/" + str(subset.idxmin())), subset[subset.idxmin()]

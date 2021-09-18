@@ -12,7 +12,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
 from tqdm import tqdm
-from . import stats
+from string import Template
+from . import utils
 
 logger = logging.getLogger()
 logging.getLogger("praw").setLevel(logging.WARNING)
@@ -67,8 +68,9 @@ def get_timestamp_range(day: str) -> (int, int):
     return int(min_datetime.timestamp()), int(datetime(y, m, d, 23, 00).timestamp())
 
 
-def get_post_data(reddit, post_ids: list) -> list:
+def get_data(reddit, post_ids: list) -> (list, list):
     posts = []
+    comments = []
     logger.info("Extracting posts")
     for id in tqdm(post_ids, dynamic_ncols=True):
         submission = reddit.submission(id)
@@ -82,31 +84,23 @@ def get_post_data(reddit, post_ids: list) -> list:
                     "title": submission.title,
                 }
             )
-    return posts
-
-
-def get_comment_data(reddit, post_ids: list) -> list:
-    comments = []
-    logger.info("Extracting comments")
-    for id in tqdm(post_ids, dynamic_ncols=True):
-        submission = reddit.submission(id)
-        submission.comments.replace_more(limit=None)
-        for comment in submission.comments.list():
-            author = str(comment.author)
-            if author != "None":
-                body = stats.sanitize_comment_body(comment.body)
-                comments.append(
-                    {
-                        "id": comment.id,
-                        "score": comment.score,
-                        "author": author,
-                        "permalink": f"https://reddit.com{comment.permalink}",
-                        "body": body,
-                        "parent": comment.parent_id,
-                        "length": len(body),
-                    }
-                )
-    return comments
+            submission.comments.replace_more(limit=None)
+            for comment in submission.comments.list():
+                author = str(comment.author)
+                if author != "None":
+                    body = utils.sanitize_comment_body(comment.body)
+                    comments.append(
+                        {
+                            "id": comment.id,
+                            "score": comment.score,
+                            "author": author,
+                            "permalink": f"https://reddit.com{comment.permalink}",
+                            "body": body,
+                            "parent": comment.parent_id,
+                            "length": len(body),
+                        }
+                    )
+    return posts, comments
 
 
 def redditconnect(config_section: str):
@@ -115,53 +109,17 @@ def redditconnect(config_section: str):
     return reddit
 
 
-def format_title(template: str, title: str, day: str) -> str:
+def format_title(template: Template, title: str, day: str) -> str:
     y, m, d = [int(x) for x in day.split("-", 3)]
     date = datetime(y, m, d).strftime("%A %d %b %Y")
-    return eval(template)
+    env = {"title": title, "date": date}
+    return template.safe_substitute(env)
 
 
-def format_report(reddit, template: str, df_posts: list, df_comments: list) -> str:
-    """Create stats from post_data and comment_data.
-    Replace variables in template
-    Available tokens:
-    - number_total_posts
-    - number_total_comments
-    - number_unique_users
-    - best_post_author
-    - best_post_score
-    - best_post_title
-    - best_post_link
-    - best_comment_author
-    - best_comment_score
-    - best_comment_body
-    - best_comment_link
-    - worst_comment_author
-    - worst_comment_score
-    - worst_comment_body
-    - worst_comment_link
-    - discussed_comment_author
-    - discussed_comment_answers
-    - discussed_comment_body
-    - discussed_comment_link
-    - amoureux_author1
-    - amoureux_author2
-    - amoureux_score
-    - qualite_author
-    - qualite_score
-    - poc_author
-    - poc_score
-    - tartine_author
-    - tartine_score
-    - capslock_author
-    - capslock_score
-    - indecision_author
-    - indecision_score
-    - jackpot_author
-    - jackpost_score
-    - krach_author
-    - krach_score
-    """
+def format_report(
+    reddit, template: Template, df_posts: pd.DataFrame, df_comments: pd.DataFrame
+) -> str:
+    """Create stats from posts and comments."""
     number_total_posts = len(df_posts)
     number_total_comments = len(df_comments)
     number_unique_users = len(
@@ -172,42 +130,80 @@ def format_report(reddit, template: str, df_posts: list, df_comments: list) -> s
         best_post_score,
         best_post_title,
         best_post_link,
-    ) = stats.get_best_post(df_posts)
+    ) = utils.get_best_post(df_posts)
     (
         best_comment_author,
         best_comment_score,
         best_comment_body,
         best_comment_link,
-    ) = stats.get_best_comment(df_comments)
+    ) = utils.get_best_comment(df_comments)
     (
         worst_comment_author,
         worst_comment_score,
         worst_comment_body,
         worst_comment_link,
-    ) = stats.get_worst_comment(df_comments)
+    ) = utils.get_worst_comment(df_comments)
     (
         discussed_comment_author,
         discussed_comment_answers,
         discussed_comment_body,
         discussed_comment_link,
-    ) = stats.get_discussed_comment(reddit, df_comments)
-    amoureux_author1, amoureux_author2, amoureux_score = stats.get_amoureux(df_comments)
-    qualite_author, qualite_score = stats.get_qualite(df_comments)
-    poc_author, poc_score = stats.get_poc(df_comments)
-    tartine_author, tartine_score = stats.get_tartine(df_comments)
-    capslock_author, capslock_score = stats.get_capslock(df_comments)
-    indecision_author, indecision_score = stats.get_indecision(df_comments)
-    jackpot_author, jackpot_score = stats.get_jackpot(df_comments)
-    krach_author, krach_score = stats.get_krach(df_comments)
+    ) = utils.get_discussed_comment(reddit, df_comments)
+    amoureux_author1, amoureux_author2, amoureux_score = utils.get_amoureux(df_comments)
+    qualite_author, qualite_score = utils.get_qualite(df_comments)
+    poc_author, poc_score = utils.get_poc(df_comments)
+    tartine_author, tartine_score = utils.get_tartine(df_comments)
+    capslock_author, capslock_score = utils.get_capslock(df_comments)
+    indecision_author, indecision_score = utils.get_indecision(df_comments)
+    jackpot_author, jackpot_score = utils.get_jackpot(df_comments)
+    krach_author, krach_score = utils.get_krach(df_comments)
 
-    formatted_message = eval(template)
-    return formatted_message, best_comment_body
+    env = {
+        "number_total_posts": number_total_posts,
+        "number_total_comments": number_total_comments,
+        "number_unique_users": number_unique_users,
+        "best_post_author": best_post_author,
+        "best_post_score": best_post_score,
+        "best_post_title": best_post_title,
+        "best_post_link": best_post_link,
+        "best_comment_author": best_comment_author,
+        "best_comment_score": best_comment_score,
+        "best_comment_body": best_comment_body,
+        "best_comment_link": best_comment_link,
+        "worst_comment_author": worst_comment_author,
+        "worst_comment_score": worst_comment_score,
+        "worst_comment_body": worst_comment_body,
+        "worst_comment_link": worst_comment_link,
+        "discussed_comment_author": discussed_comment_author,
+        "discussed_comment_answers": discussed_comment_answers,
+        "discussed_comment_body": discussed_comment_body,
+        "discussed_comment_link": discussed_comment_link,
+        "amoureux_author1": amoureux_author1,
+        "amoureux_author2": amoureux_author2,
+        "amoureux_score": amoureux_score,
+        "qualite_author": qualite_author,
+        "qualite_score": qualite_score,
+        "poc_author": poc_author,
+        "poc_score": poc_score,
+        "tartine_author": tartine_author,
+        "tartine_score": tartine_score,
+        "capslock_author": capslock_author,
+        "capslock_score": capslock_score,
+        "indecision_author": indecision_author,
+        "indecision_score": indecision_score,
+        "jackpot_author": jackpot_author,
+        "jackpot_score": jackpot_score,
+        "krach_author": krach_author,
+        "krach_score": krach_score,
+    }
+
+    return template.safe_substitute(env), best_comment_body
 
 
 def read_template(file: str) -> str:
     with open(file, "r") as f:
         content = f.read()
-    return content
+    return Template(content)
 
 
 def main():
@@ -224,8 +220,6 @@ def main():
     # to_string() uses this option to truncate its output
     pd.options.display.max_colwidth = None
 
-    breakpoint()
-
     report_day = datetime.now().strftime("%Y-%m-%d") if not args.day else args.day
     logger.info(
         f"Creating report for subreddit {args.report_subreddit} and day {report_day}."
@@ -241,12 +235,11 @@ def main():
         raise ValueError("post_ids is empty.")
 
     # Extract current data with praw
-    post_data = get_post_data(reddit, post_ids)
-    comment_data = get_comment_data(reddit, post_ids)
+    posts, comments = get_data(reddit, post_ids)
 
     # Convert to pandas dataframe
-    df_posts = pd.DataFrame(post_data)
-    df_comments = pd.DataFrame(comment_data)
+    df_posts = pd.DataFrame(posts)
+    df_comments = pd.DataFrame(comments)
 
     # Stats calculation + template evaluation
     template = read_template(args.template_file)
@@ -262,14 +255,14 @@ def main():
     post_title = format_title(template_title, title, report_day)
     if not args.no_posting:
         logger.info(
-            f"Sending post to {args.post_subreddit}. Title: {post_title}. Content: {formatted_message}."
+            f"Sending post to {args.post_subreddit}\nTitle: {post_title}\nContent: {formatted_message}"
         )
         reddit.subreddit(args.post_subreddit).submit(
             title=post_title, selftext=formatted_message
         )
     else:
         logger.info(
-            f"Posting is disabled. Title: {post_title}. Content: {formatted_message}."
+            f"Posting is disabled\nTitle: {post_title}\nContent: {formatted_message}"
         )
 
     logger.info("Runtime: %.2f seconds." % (time.time() - START_TIME))
