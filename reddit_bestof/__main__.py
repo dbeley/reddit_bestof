@@ -18,17 +18,10 @@ from . import utils
 logger = logging.getLogger()
 logging.getLogger("praw").setLevel(logging.WARNING)
 START_TIME = time.time()
-VALID_PUSHSHIFT_TYPES = ["submission", "comment"]
 
 
-def get_pushshift_data(
-    type: str, sub: str, min_timestamp: int, max_timestamp: int
-) -> list:
-    if type not in VALID_PUSHSHIFT_TYPES:
-        raise ValueError(
-            f"{type} is not a valid pushshift type. Valid values = {VALID_PUSHSHIFT_TYPES}."
-        )
-    url = f"https://api.pushshift.io/reddit/search/{type}?&size=1000&subreddit={sub}&after={min_timestamp}&before={max_timestamp}"
+def get_pushshift_data(sub: str, min_timestamp: int, max_timestamp: int) -> list:
+    url = f"https://api.pushshift.io/reddit/search/submission?&size=1000&subreddit={sub}&after={min_timestamp}&before={max_timestamp}"
     iter = 0
     while True:
         iter += 1
@@ -44,15 +37,15 @@ def get_pushshift_data(
 
 
 def get_pushshift_ids(
-    type: str, sub: str, min_timestamp: int, max_timestamp: int, test: bool
+    sub: str, min_timestamp: int, max_timestamp: int, test: bool
 ) -> list:
     list_ids = []
-    ids = get_pushshift_data(type, sub, min_timestamp, max_timestamp)
+    ids = get_pushshift_data(sub, min_timestamp, max_timestamp)
     while len(ids) > 0:
         for id in ids:
             list_ids.append(id["id"])
         logger.debug(f"New min timestamp = {ids[-1]['created_utc']}.")
-        ids = get_pushshift_data(type, sub, ids[-1]["created_utc"], max_timestamp)
+        ids = get_pushshift_data(sub, ids[-1]["created_utc"], max_timestamp)
         if test:
             break
     return list_ids
@@ -71,7 +64,6 @@ def get_timestamp_range(day: str) -> (int, int):
 def get_data(reddit, post_ids: list) -> (list, list):
     posts = []
     comments = []
-    logger.info("Extracting posts")
     for id in tqdm(post_ids, dynamic_ncols=True):
         submission = reddit.submission(id)
         author = str(submission.author)
@@ -109,15 +101,17 @@ def redditconnect(config_section: str):
     return reddit
 
 
-def format_title(template: Template, title: str, day: str) -> str:
+def get_post_title(post_env: dict, day: str) -> str:
     y, m, d = [int(x) for x in day.split("-", 3)]
     date = datetime(y, m, d).strftime("%A %d %b %Y")
-    env = {"title": title, "date": date}
-    return template.safe_substitute(env)
+    return {
+        "date": date,
+        "title": post_env["best_post_title"],
+    }
 
 
-def format_report(
-    reddit, template: Template, df_posts: pd.DataFrame, df_comments: pd.DataFrame
+def get_stats(
+    reddit: praw.Reddit, df_posts: pd.DataFrame, df_comments: pd.DataFrame
 ) -> str:
     """Create stats from posts and comments."""
     number_total_posts = len(df_posts)
@@ -158,7 +152,7 @@ def format_report(
     jackpot_author, jackpot_score = utils.get_jackpot(df_comments)
     krach_author, krach_score = utils.get_krach(df_comments)
 
-    env = {
+    return {
         "number_total_posts": number_total_posts,
         "number_total_comments": number_total_comments,
         "number_unique_users": number_unique_users,
@@ -197,8 +191,6 @@ def format_report(
         "krach_score": krach_score,
     }
 
-    return template.safe_substitute(env), best_comment_body
-
 
 def read_template(file: str) -> str:
     with open(file, "r") as f:
@@ -229,7 +221,7 @@ def main():
 
     # Extract post ids with pushshift
     post_ids = get_pushshift_ids(
-        "submission", args.report_subreddit, min_timestamp, max_timestamp, args.test
+        args.report_subreddit, min_timestamp, max_timestamp, args.test
     )
     if len(post_ids) == 0:
         raise ValueError("post_ids is empty.")
@@ -242,8 +234,8 @@ def main():
     df_comments = pd.DataFrame(comments)
 
     # Stats calculation + template evaluation
-    template = read_template(args.template_file)
-    formatted_message, title = format_report(reddit, template, df_posts, df_comments)
+    env_post = get_stats(reddit, df_posts, df_comments)
+    formatted_message = read_template(args.template_file).safe_substitute(env_post)
 
     filename = f"{report_day}_{args.report_subreddit}_{int(START_TIME)}.txt"
     logger.info(f"Exporting formatted post to Exports/{filename}")
@@ -251,8 +243,8 @@ def main():
     with open(f"Exports/{filename}", "w") as f:
         f.write(formatted_message)
 
-    template_title = read_template(args.template_file_title)
-    post_title = format_title(template_title, title, report_day)
+    env_title = get_post_title(env_post, report_day)
+    post_title = read_template(args.template_file_title).safe_substitute(env_title)
     if not args.no_posting:
         logger.info(
             f"Sending post to {args.post_subreddit}\nTitle: {post_title}\nContent: {formatted_message}"

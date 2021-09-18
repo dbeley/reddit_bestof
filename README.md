@@ -92,9 +92,27 @@ systemctl --user start reddit_bestof
 
 - `manually_send_report.py`: manually send a report created with `reddit_bestof`
 
+```
+python manually_send_report.py -h
+```
+
+```
+usage: manually_send_report.py [-h] [--debug] -p POST_SUBREDDIT -f FILE
+                               [--no_posting]
+
+Send a BestOf report to reddit.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --debug               Display debugging information
+  -p POST_SUBREDDIT, --post_subreddit POST_SUBREDDIT
+                        Subreddit to send the formatted message to (required,
+                        without prefix, example: bestoffrance2)
+  -f FILE, --file FILE  File containing the content of the post
+  --no_posting          Disable posting to reddit
+```
+
 ## TODO
 
-- filter out deleted/hidden posts/comments
 - add records for each category
 - add gilded comments
-- convert to script to use a stream?
