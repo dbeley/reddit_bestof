@@ -27,7 +27,7 @@ def sanitize_username(username: str) -> str:
 def get_best_post(df_posts):
     best_post = df_posts.loc[df_posts["score"].idxmax()]
     return (
-        sanitize_username("/u/" + best_post["author"]),
+        sanitize_username("/u/" + str(best_post["author"])),
         best_post["score"],
         best_post["title"],
         best_post["permalink"],
@@ -37,7 +37,7 @@ def get_best_post(df_posts):
 def get_best_comment(df_comments):
     best_comment = df_comments.loc[df_comments["score"].idxmax()]
     return (
-        sanitize_username("/u/" + best_comment["author"]),
+        sanitize_username("/u/" + str(best_comment["author"])),
         best_comment["score"],
         sanitize_long_text(best_comment["body"]),
         best_comment["permalink"],
@@ -47,7 +47,7 @@ def get_best_comment(df_comments):
 def get_worst_comment(df_comments):
     worst_comment = df_comments.loc[df_comments["score"].idxmin()]
     return (
-        sanitize_username("/u/" + worst_comment["author"]),
+        sanitize_username("/u/" + str(worst_comment["author"])),
         worst_comment["score"],
         sanitize_long_text(worst_comment["body"]),
         worst_comment["permalink"],
@@ -63,10 +63,12 @@ def get_discussed_comment(reddit, df_comments):
     discussed_comment = df_comments[df_comments["id"] == discussed_parent_id]
     if not discussed_comment.empty:
         return (
-            sanitize_username("/u/" + discussed_comment["author"]),
+            sanitize_username(
+                "/u/" + str(discussed_comment.author.to_string(index=False))
+            ),
             discussed_comment_answers,
-            sanitize_long_text(discussed_comment["body"]),
-            discussed_comment["permalink"],
+            sanitize_long_text(discussed_comment.body.to_string(index=False)),
+            discussed_comment.permalink.to_string(index=False),
         )
     else:
         logger.warning(
@@ -85,7 +87,7 @@ def get_discussed_comment(reddit, df_comments):
 def get_amoureux(df_comments):
     # filter comments answering to another comment
     subset = df_comments[df_comments.parent.str.startswith("t1_")]
-    subset["parent_id"] = subset["parent"].str.split("_").str[-1]
+    subset.loc[:, "parent_id"] = subset.parent.str.split("_").str[-1]
     subset2 = subset.set_index("id").join(subset.set_index("parent_id"), rsuffix="_new")
     subset3 = (
         subset2[subset2.author_new.notnull()][["author", "author_new"]]
@@ -95,8 +97,8 @@ def get_amoureux(df_comments):
     score = subset3[0]
     authors = [x for x, y in subset3.index[0].items()]
     return (
-        sanitize_username("/u/" + authors[0]),
-        sanitize_username("/u/" + authors[1]),
+        sanitize_username("/u/" + str(authors[0])),
+        sanitize_username("/u/" + str(authors[1])),
         score,
     )
 
@@ -108,7 +110,7 @@ def get_qualite(df_comments):
     Le score est mesuré en milliSPHKS en l'honneur de /u/sphks qui a suggéré cette fonctionnalité (1 SPHKS = 1 point de karma par caractère)."""
     subset = df_comments.groupby(["author"]).sum()
     subset2 = subset[subset.length > 140]
-    subset2["milliSPHKS"] = subset2["score"] / subset2["length"] * 1000
+    subset2.loc[:, "milliSPHKS"] = subset2["score"] / subset2["length"] * 1000
     qualite_author = subset2.loc[subset2["milliSPHKS"].idxmax()]
     return sanitize_username("/u/" + str(qualite_author.name)), round(
         qualite_author["milliSPHKS"], 2
@@ -117,33 +119,33 @@ def get_qualite(df_comments):
 
 def get_poc(df_comments):
     poc = df_comments["author"].value_counts()
-    return sanitize_username("/u/" + poc.idxmax()), poc[0]
+    return sanitize_username("/u/" + str(poc.idxmax())), poc[0]
 
 
 def get_tartine(df_comments):
     subset = df_comments.groupby(["author"]).sum()["length"]
-    return sanitize_username("/u/" + subset.idxmax()), subset[subset.idxmax()]
+    return sanitize_username("/u/" + str(subset.idxmax())), subset[subset.idxmax()]
 
 
 def get_capslock(df_comments):
     subset = df_comments
     subset["capslock"] = subset["body"].str.count(r"[A-Z]")
     subset2 = subset.groupby("author").sum()["capslock"]
-    return sanitize_username("/u/" + subset2.idxmax()), subset2[subset2.idxmax()]
+    return sanitize_username("/u/" + str(subset2.idxmax())), subset2[subset2.idxmax()]
 
 
 def get_indecision(df_comments):
     subset = df_comments
     subset["question"] = subset["body"].str.count(r"[?]")
     subset2 = subset.groupby("author").sum()["question"]
-    return sanitize_username("/u/" + subset2.idxmax()), subset2[subset2.idxmax()]
+    return sanitize_username("/u/" + str(subset2.idxmax())), subset2[subset2.idxmax()]
 
 
 def get_jackpot(df_comments):
     subset = df_comments.groupby(["author"]).sum()["score"]
-    return sanitize_username("/u/" + subset.idxmax()), subset[subset.idxmax()]
+    return sanitize_username("/u/" + str(subset.idxmax())), subset[subset.idxmax()]
 
 
 def get_krach(df_comments):
     subset = df_comments.groupby(["author"]).sum()["score"]
-    return sanitize_username("/u/" + subset.idxmin()), subset[subset.idxmin()]
+    return sanitize_username("/u/" + str(subset.idxmin())), subset[subset.idxmin()]

@@ -43,7 +43,7 @@ def get_pushshift_data(
 
 
 def get_pushshift_ids(
-    type: str, sub: str, min_timestamp: int, max_timestamp: int
+    type: str, sub: str, min_timestamp: int, max_timestamp: int, test: bool
 ) -> list:
     list_ids = []
     ids = get_pushshift_data(type, sub, min_timestamp, max_timestamp)
@@ -52,6 +52,8 @@ def get_pushshift_ids(
             list_ids.append(id["id"])
         logger.debug(f"New min timestamp = {ids[-1]['created_utc']}.")
         ids = get_pushshift_data(type, sub, ids[-1]["created_utc"], max_timestamp)
+        if test:
+            break
     return list_ids
 
 
@@ -212,6 +214,9 @@ def main():
     args = parse_args()
     reddit = redditconnect("bot")
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
+    # to_string() uses this option to truncate its output
+    pd.options.display.max_colwidth = None
+    # pd.options.mode.chained_assignment = "raise"
     report_day = datetime.now().strftime("%Y-%m-%d") if not args.day else args.day
     logger.info(
         f"Creating report for subreddit {args.report_subreddit} and day {report_day}."
@@ -224,10 +229,10 @@ def main():
 
     # Extract ids with pushshift
     post_ids = get_pushshift_ids(
-        "submission", args.report_subreddit, min_timestamp, max_timestamp
+        "submission", args.report_subreddit, min_timestamp, max_timestamp, args.test
     )
     comment_ids = get_pushshift_ids(
-        "comment", args.report_subreddit, min_timestamp, max_timestamp
+        "comment", args.report_subreddit, min_timestamp, max_timestamp, args.test
     )
     if len(post_ids) == 0:
         raise ValueError("post_ids is empty.")
@@ -323,6 +328,12 @@ def parse_args():
         "--no_posting",
         help="Disable posting to Reddit",
         dest="no_posting",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--test",
+        help="Use a very small subset of data",
+        dest="test",
         action="store_true",
     )
     parser.set_defaults(no_posting=False)
