@@ -106,7 +106,7 @@ def get_post_title(post_env: dict, day: str) -> str:
     date = datetime(y, m, d).strftime("%A %d %b %Y")
     return {
         "date": date,
-        "title": post_env["best_post_title"],
+        "title": post_env["best_comment_title"],
     }
 
 
