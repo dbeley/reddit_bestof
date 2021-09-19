@@ -66,7 +66,7 @@ optional arguments:
 
 ### Example
 
-Create a report for /r/france for 2021-09-16 using template_besoffrance.txt as post template and template_bestoffrance_title as title template and post it to /r/bestoffrance2:
+Create a report for `/r/france` for `2021-09-16` using `template_besoffrance.txt` as post template and `template_bestoffrance_title.txt` as title template and post it to `/r/bestoffrance2`:
 ```
 reddit_bestof -s france -d "2021-09-16" -p bestoffrance2 -f template_bestoffrance.txt -t template_bestoffrance_title.txt
 ```
@@ -116,3 +116,5 @@ optional arguments:
 
 - add records for each category
 - add gilded comments
+- improve datetime handling
+- compare pushshift with praw.reddit.new

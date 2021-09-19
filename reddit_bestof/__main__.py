@@ -4,20 +4,21 @@ Create and send Reddit BestOf reports.
 import logging
 import time
 import argparse
-import requests
-import praw
 import json
 import locale
+import requests
+import praw
 import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
-from tqdm import tqdm
 from string import Template
+from tqdm import tqdm
 from . import utils
 
 logger = logging.getLogger()
 logging.getLogger("praw").setLevel(logging.WARNING)
 START_TIME = time.time()
+MAX_POSTS_TO_EXTRACT = 3000
 
 
 def get_pushshift_data(sub: str, min_timestamp: int, max_timestamp: int) -> list:
@@ -51,6 +52,22 @@ def get_pushshift_ids(
     return list_ids
 
 
+def get_reddit_ids(
+    reddit: praw.Reddit, sub: str, min_timestamp: int, max_timestamp: int, test: bool
+) -> list:
+    limit = 100 if test else MAX_POSTS_TO_EXTRACT
+    posts = reddit.subreddit(sub).new(limit=limit)
+    list_posts = [{"id": i.id, "timestamp": int(i.created_utc)} for i in posts]
+    breakpoint()
+    logger.debug(f"Posts extracted with praw API {len(list_posts)}")
+    post_ids = [
+        i["id"]
+        for i in list_posts
+        if i["timestamp"] >= min_timestamp and i["timestamp"] <= max_timestamp
+    ]
+    return post_ids
+
+
 def get_timestamp_range(day: str) -> (int, int):
     """Return the range of the report with a min and max timestamp.
     Example: for 2021-09-16, return the timestamp for 2021-09-15 21:00 and 2021-09-16 21:00
@@ -74,6 +91,7 @@ def get_data(reddit, post_ids: list) -> (list, list):
                     "author": author,
                     "permalink": f"https://reddit.com{submission.permalink}",
                     "title": submission.title,
+                    "timestamp": int(submission.created_utc),
                 }
             )
             submission.comments.replace_more(limit=None)
@@ -90,6 +108,7 @@ def get_data(reddit, post_ids: list) -> (list, list):
                             "body": body,
                             "parent": comment.parent_id,
                             "length": len(body),
+                            "timestamp": int(submission.created_utc),
                         }
                     )
     return posts, comments
@@ -209,22 +228,28 @@ def main():
 
     reddit = redditconnect("bot")
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
-    # to_string() uses this option to truncate its output
+    # pd.to_string() uses this option to truncate its output
     pd.options.display.max_colwidth = None
 
     report_day = datetime.now().strftime("%Y-%m-%d") if not args.day else args.day
-    logger.info(
-        f"Creating report for subreddit {args.report_subreddit} and day {report_day}."
-    )
+    logger.info(f"Creating report for subreddit {args.subreddit} and day {report_day}.")
     min_timestamp, max_timestamp = get_timestamp_range(report_day)
     logger.debug(f"Extracting data between {min_timestamp} and {max_timestamp}.")
 
-    # Extract post ids with pushshift
-    post_ids = get_pushshift_ids(
-        args.report_subreddit, min_timestamp, max_timestamp, args.test
-    )
+    # If a specific day is set, extract ids with pushshift, otherwise with praw
+    if args.day:
+        post_ids = get_pushshift_ids(
+            args.subreddit, min_timestamp, max_timestamp, args.test
+        )
+    else:
+        post_ids = get_reddit_ids(
+            reddit, args.subreddit, min_timestamp, max_timestamp, args.test
+        )
+
     if len(post_ids) == 0:
-        raise ValueError("post_ids is empty.")
+        raise ValueError(
+            f"No /r/{args.subreddit} posts were found for {day} (between {min_timestamp} and {max_timestamp})."
+        )
 
     # Extract current data with praw
     posts, comments = get_data(reddit, post_ids)
@@ -237,7 +262,7 @@ def main():
     env_post = get_stats(reddit, df_posts, df_comments)
     formatted_message = read_template(args.template_file).safe_substitute(env_post)
 
-    filename = f"{report_day}_{args.report_subreddit}_{int(START_TIME)}.txt"
+    filename = f"{report_day}_{args.subreddit}_{int(START_TIME)}.txt"
     logger.info(f"Exporting formatted post to Exports/{filename}")
     Path("Exports").mkdir(parents=True, exist_ok=True)
     with open(f"Exports/{filename}", "w") as f:
@@ -274,7 +299,7 @@ def parse_args():
     )
     parser.add_argument(
         "-s",
-        "--report_subreddit",
+        "--subreddit",
         help="Subreddit (required, without prefix, example: france)",
         type=str,
         required=True,
