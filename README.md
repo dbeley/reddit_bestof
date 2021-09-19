@@ -117,4 +117,3 @@ optional arguments:
 - add records for each category
 - add gilded comments
 - improve datetime handling
-- compare pushshift with praw.reddit.new

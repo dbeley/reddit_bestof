@@ -58,7 +58,6 @@ def get_reddit_ids(
     limit = 100 if test else MAX_POSTS_TO_EXTRACT
     posts = reddit.subreddit(sub).new(limit=limit)
     list_posts = [{"id": i.id, "timestamp": int(i.created_utc)} for i in posts]
-    breakpoint()
     logger.debug(f"Posts extracted with praw API {len(list_posts)}")
     post_ids = [
         i["id"]
