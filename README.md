@@ -5,10 +5,11 @@ Work-in-progress.
 `reddit_bestof` is a python tool used to generate the reports at [**/r/BestOfFrance2**](https://reddit.com/r/bestoffrance2).
 
 It is intended to be run every day at 9 pm. It will:
-	- extract the activity of a subreddit for the last day (from yesterday 9 pm to today 9 pm)
-	- create a report from a template
-	- export the report to a text file
-	- (optional) send it to a new post in a subreddit of your choice
+
+- extract the activity of a subreddit for the last day (from yesterday 9 pm to today 9 pm)
+- create a report from a template
+- export the report to a text file
+- (optional) send it to a new post in a subreddit of your choice
 
 It is designed to be as generic as possible so it should work with any subreddit.
 
