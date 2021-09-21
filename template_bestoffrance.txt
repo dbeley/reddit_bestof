@@ -8,6 +8,12 @@ par ${best_post_author} avec **${best_post_score} points**
 
 > [${best_post_title}](${best_post_link})
 
+## *Post le plus commenté*
+
+par ${commented_post_author} avec **${commented_post_comments} commentaires**
+
+> [${commented_post_title}](${commented_post_link})
+
 ## *Meilleur commentaire*
 
 par ${best_comment_author} avec **${best_comment_score} points**
@@ -36,7 +42,7 @@ par ${discussed_comment_author} avec **${discussed_comment_answers} réponses**
 * Prix de la tartine de texte : ${tartine_author} avec un total de **${tartine_score}** caractères tapés
 * Prix 'MON CAPS LOCK EST CASSE' : ${capslock_author} qui a gueulé, en tout, sur **${capslock_score}** caractères
 * Prix de l'indécision : ${indecision_author} avec **${indecision_score}** questions
-* Karma-Jackpot : ${jackpot_author} avec + **${jackpot_score}** points!
+* Karma-Jackpot : ${jackpot_author} avec **+${jackpot_score}** points!
 * Karma-Krach : ${krach_author} avec **${krach_score}** points!
 
 ---

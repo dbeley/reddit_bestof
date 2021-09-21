@@ -86,11 +86,13 @@ def get_data(reddit, post_ids: list) -> (list, list):
         if author != "None" and not submission.hidden and submission.is_robot_indexable:
             posts.append(
                 {
+                    "id": id,
                     "score": submission.score,
-                    "author": author,
+                    "author": utils.sanitize_username("/u/" + author),
                     "permalink": f"https://reddit.com{submission.permalink}",
                     "title": submission.title,
                     "timestamp": int(submission.created_utc),
+                    "num_comments": submission.num_comments,
                 }
             )
             submission.comments.replace_more(limit=None)
@@ -138,6 +140,7 @@ def get_env_post(
         pd.unique(df_posts["author"].append(df_comments["author"], ignore_index=True))
     )
     best_post = utils.get_best_post(df_posts)
+    commented_post = utils.get_commented_post(df_posts)
     best_comment = utils.get_best_comment(df_comments)
     worst_comment = utils.get_worst_comment(df_comments)
     discussed_comment = utils.get_discussed_comment(reddit, df_comments)
@@ -158,18 +161,27 @@ def get_env_post(
         "best_post_score": best_post["best_post_score"],
         "best_post_title": best_post["best_post_title"],
         "best_post_link": best_post["best_post_link"],
+        "best_post_id": best_post["best_post_id"],
+        "commented_post_author": commented_post["commented_post_author"],
+        "commented_post_comments": commented_post["commented_post_comments"],
+        "commented_post_title": commented_post["commented_post_title"],
+        "commented_post_link": commented_post["commented_post_link"],
+        "commented_post_id": commented_post["commented_post_id"],
         "best_comment_author": best_comment["best_comment_author"],
         "best_comment_score": best_comment["best_comment_score"],
         "best_comment_body": best_comment["best_comment_body"],
         "best_comment_link": best_comment["best_comment_link"],
+        "best_comment_id": best_comment["best_comment_id"],
         "worst_comment_author": worst_comment["worst_comment_author"],
         "worst_comment_score": worst_comment["worst_comment_score"],
         "worst_comment_body": worst_comment["worst_comment_body"],
         "worst_comment_link": worst_comment["worst_comment_link"],
+        "worst_comment_id": worst_comment["worst_comment_id"],
         "discussed_comment_author": discussed_comment["discussed_comment_author"],
         "discussed_comment_answers": discussed_comment["discussed_comment_answers"],
         "discussed_comment_body": discussed_comment["discussed_comment_body"],
         "discussed_comment_link": discussed_comment["discussed_comment_link"],
+        "discussed_comment_id": discussed_comment["discussed_comment_id"],
         "amoureux_author1": amoureux_stat["amoureux_author1"],
         "amoureux_author2": amoureux_stat["amoureux_author2"],
         "amoureux_score": amoureux_stat["amoureux_score"],
@@ -194,6 +206,26 @@ def read_template(file: str) -> str:
     with open(file, "r") as f:
         content = f.read()
     return Template(content)
+
+
+def notify_winners(
+    reddit: praw.Reddit, submission: praw.models.Submission, env_post: dict
+):
+    logger.warning(
+        f"Notifying winners. Don't do this if you're just testing the script!"
+    )
+    message_text_comment = f"Félicitations, ce commentaire a été sélectionné dans [le bestof]({'https://reddit.com' + submission.permalink}) !"
+    winning_comments = set(
+        [
+            env_post["best_comment_id"],
+            env_post["worst_comment_id"],
+            env_post["discussed_comment_id"],
+        ]
+    )
+    for i in winning_comments:
+        comment = reddit.comment(i)
+        logger.info(f"comment.reply({message_text_comment})")
+        comment.reply(message_text_comment)
 
 
 def main():
@@ -253,9 +285,11 @@ def main():
         logger.info(
             f"Sending post to {args.post_subreddit}\nTitle: {post_title}\nContent: {formatted_message}"
         )
-        reddit.subreddit(args.post_subreddit).submit(
+        submission = reddit.subreddit(args.post_subreddit).submit(
             title=post_title, selftext=formatted_message
         )
+        if args.notify_winners and not args.test:
+            notify_winners(reddit, submission, env_post)
     else:
         logger.info(
             f"Posting is disabled\nTitle: {post_title}\nContent: {formatted_message}"
@@ -321,7 +355,13 @@ def parse_args():
         dest="test",
         action="store_true",
     )
-    parser.set_defaults(no_posting=False)
+    parser.add_argument(
+        "--notify_winners",
+        help="Send a message to winners.",
+        dest="notify_winners",
+        action="store_true",
+    )
+    parser.set_defaults(no_posting=False, test=False, notify_winners=False)
     args = parser.parse_args()
 
     logging.basicConfig(level=args.loglevel)
