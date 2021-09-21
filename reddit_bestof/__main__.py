@@ -119,7 +119,7 @@ def redditconnect(config_section: str):
     return reddit
 
 
-def get_post_title(post_env: dict, day: str) -> str:
+def get_env_title(post_env: dict, day: str) -> str:
     y, m, d = [int(x) for x in day.split("-", 3)]
     date = datetime(y, m, d).strftime("%A %d %b %Y")
     return {
@@ -128,7 +128,7 @@ def get_post_title(post_env: dict, day: str) -> str:
     }
 
 
-def get_stats(
+def get_env_post(
     reddit: praw.Reddit, df_posts: pd.DataFrame, df_comments: pd.DataFrame
 ) -> str:
     """Create stats from posts and comments."""
@@ -137,76 +137,56 @@ def get_stats(
     number_unique_users = len(
         pd.unique(df_posts["author"].append(df_comments["author"], ignore_index=True))
     )
-    (
-        best_post_author,
-        best_post_score,
-        best_post_title,
-        best_post_link,
-    ) = utils.get_best_post(df_posts)
-    (
-        best_comment_author,
-        best_comment_score,
-        best_comment_body,
-        best_comment_link,
-    ) = utils.get_best_comment(df_comments)
-    (
-        worst_comment_author,
-        worst_comment_score,
-        worst_comment_body,
-        worst_comment_link,
-    ) = utils.get_worst_comment(df_comments)
-    (
-        discussed_comment_author,
-        discussed_comment_answers,
-        discussed_comment_body,
-        discussed_comment_link,
-    ) = utils.get_discussed_comment(reddit, df_comments)
-    amoureux_author1, amoureux_author2, amoureux_score = utils.get_amoureux(df_comments)
-    qualite_author, qualite_score = utils.get_qualite(df_comments)
-    poc_author, poc_score = utils.get_poc(df_comments)
-    tartine_author, tartine_score = utils.get_tartine(df_comments)
-    capslock_author, capslock_score = utils.get_capslock(df_comments)
-    indecision_author, indecision_score = utils.get_indecision(df_comments)
-    jackpot_author, jackpot_score = utils.get_jackpot(df_comments)
-    krach_author, krach_score = utils.get_krach(df_comments)
+    best_post = utils.get_best_post(df_posts)
+    best_comment = utils.get_best_comment(df_comments)
+    worst_comment = utils.get_worst_comment(df_comments)
+    discussed_comment = utils.get_discussed_comment(reddit, df_comments)
+    amoureux_stat = utils.get_amoureux(df_comments)
+    qualite_stat = utils.get_qualite(df_comments)
+    poc_stat = utils.get_poc(df_comments)
+    tartine_stat = utils.get_tartine(df_comments)
+    capslock_stat = utils.get_capslock(df_comments)
+    indecision_stat = utils.get_indecision(df_comments)
+    jackpot_stat = utils.get_jackpot(df_comments)
+    krach_stat = utils.get_krach(df_comments)
 
     return {
         "number_total_posts": number_total_posts,
         "number_total_comments": number_total_comments,
         "number_unique_users": number_unique_users,
-        "best_post_author": best_post_author,
-        "best_post_score": best_post_score,
-        "best_post_title": best_post_title,
-        "best_post_link": best_post_link,
-        "best_comment_author": best_comment_author,
-        "best_comment_score": best_comment_score,
-        "best_comment_body": best_comment_body,
-        "best_comment_link": best_comment_link,
-        "worst_comment_author": worst_comment_author,
-        "worst_comment_score": worst_comment_score,
-        "worst_comment_body": worst_comment_body,
-        "worst_comment_link": worst_comment_link,
-        "discussed_comment_author": discussed_comment_author,
-        "discussed_comment_answers": discussed_comment_answers,
-        "discussed_comment_body": discussed_comment_body,
-        "discussed_comment_link": discussed_comment_link,
-        "amoureux_author1": amoureux_author1,
-        "amoureux_author2": amoureux_author2,
-        "amoureux_score": amoureux_score,
-        "qualite_author": qualite_author,
-        "qualite_score": qualite_score,
-        "poc_author": poc_author,
-        "poc_score": poc_score,
-        "tartine_author": tartine_author,
-        "tartine_score": tartine_score,
-        "capslock_author": capslock_author,
-        "capslock_score": capslock_score,
-        "indecision_author": indecision_author,
-        "indecision_score": indecision_score,
-        "jackpot_author": jackpot_author,
-        "jackpot_score": jackpot_score,
-        "krach_author": krach_author,
-        "krach_score": krach_score,
+        "best_post_author": best_post["best_post_author"],
+        "best_post_score": best_post["best_post_score"],
+        "best_post_title": best_post["best_post_title"],
+        "best_post_link": best_post["best_post_link"],
+        "best_comment_author": best_comment["best_comment_author"],
+        "best_comment_score": best_comment["best_comment_score"],
+        "best_comment_body": best_comment["best_comment_body"],
+        "best_comment_link": best_comment["best_comment_link"],
+        "worst_comment_author": worst_comment["worst_comment_author"],
+        "worst_comment_score": worst_comment["worst_comment_score"],
+        "worst_comment_body": worst_comment["worst_comment_body"],
+        "worst_comment_link": worst_comment["worst_comment_link"],
+        "discussed_comment_author": discussed_comment["discussed_comment_author"],
+        "discussed_comment_answers": discussed_comment["discussed_comment_answers"],
+        "discussed_comment_body": discussed_comment["discussed_comment_body"],
+        "discussed_comment_link": discussed_comment["discussed_comment_link"],
+        "amoureux_author1": amoureux_stat["amoureux_author1"],
+        "amoureux_author2": amoureux_stat["amoureux_author2"],
+        "amoureux_score": amoureux_stat["amoureux_score"],
+        "qualite_author": qualite_stat["qualite_author"],
+        "qualite_score": qualite_stat["qualite_score"],
+        "poc_author": poc_stat["poc_author"],
+        "poc_score": poc_stat["poc_score"],
+        "tartine_author": tartine_stat["tartine_author"],
+        "tartine_score": tartine_stat["tartine_score"],
+        "capslock_author": capslock_stat["capslock_author"],
+        "capslock_score": capslock_stat["capslock_score"],
+        "indecision_author": indecision_stat["indecision_author"],
+        "indecision_score": indecision_stat["indecision_score"],
+        "jackpot_author": jackpot_stat["jackpot_author"],
+        "jackpot_score": jackpot_stat["jackpot_score"],
+        "krach_author": krach_stat["krach_author"],
+        "krach_score": krach_stat["krach_score"],
     }
 
 
@@ -258,7 +238,7 @@ def main():
     df_comments = pd.DataFrame(comments)
 
     # Stats calculation + template evaluation
-    env_post = get_stats(reddit, df_posts, df_comments)
+    env_post = get_env_post(reddit, df_posts, df_comments)
     formatted_message = read_template(args.template_file).safe_substitute(env_post)
 
     filename = f"{report_day}_{args.subreddit}_{int(START_TIME)}.txt"
@@ -267,7 +247,7 @@ def main():
     with open(f"Exports/{filename}", "w") as f:
         f.write(formatted_message)
 
-    env_title = get_post_title(env_post, report_day)
+    env_title = get_env_title(env_post, report_day)
     post_title = read_template(args.template_file_title).safe_substitute(env_title)
     if not args.no_posting:
         logger.info(
