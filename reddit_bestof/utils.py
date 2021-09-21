@@ -40,7 +40,7 @@ def get_best_post(df_posts: pd.DataFrame) -> (str, str, str, str):
 
 def get_commented_post(df_posts: pd.DataFrame) -> (str, str, str, str):
     """Most commented post."""
-    subset = df_posts[~df_posts.title.str.startswith("[Forum Libre]")]
+    subset = df_posts[~df_posts.title.str.startswith("Forum Libre")]
     commented_post = subset.loc[subset["num_comments"].idxmax()]
     return {
         "commented_post_author": commented_post["author"],
