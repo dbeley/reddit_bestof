@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from string import Template
 from tqdm import tqdm
+from typing import Tuple
 from . import utils
 
 logger = logging.getLogger()
@@ -67,7 +68,7 @@ def get_reddit_ids(
     return post_ids
 
 
-def get_timestamp_range(day: str) -> (int, int):
+def get_timestamp_range(day: str) -> Tuple[int, int]:
     """Return the range of the report with a min and max timestamp.
     Example: for 2021-09-16, return the timestamp for 2021-09-15 21:00 and 2021-09-16 21:00
     """
@@ -77,7 +78,7 @@ def get_timestamp_range(day: str) -> (int, int):
     return int(min_datetime.timestamp()), int(datetime(y, m, d, 23, 00).timestamp())
 
 
-def get_data(reddit, post_ids: list) -> (list, list):
+def get_data(reddit, post_ids: list) -> Tuple[list, list]:
     posts = []
     comments = []
     for id in tqdm(post_ids, dynamic_ncols=True):
@@ -202,7 +203,7 @@ def get_env_post(
     }
 
 
-def read_template(file: str) -> str:
+def read_template(file: str) -> Template:
     with open(file, "r") as f:
         content = f.read()
     return Template(content)
@@ -222,7 +223,7 @@ def notify_winners(reddit: praw.Reddit, message: str, env_post: dict):
     for i in winning_comments:
         comment = reddit.comment(i)
         logger.info(f"Sending message to comment {i}.")
-        # comment.reply(message)
+        comment.reply(message)
 
 
 def main():

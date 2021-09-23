@@ -26,7 +26,7 @@ def sanitize_username(username: str) -> str:
         return username
 
 
-def get_best_post(df_posts: pd.DataFrame) -> (str, str, str, str, str):
+def get_best_post(df_posts: pd.DataFrame) -> dict[str, str]:
     """Post with the best score."""
     best_post = df_posts.loc[df_posts["score"].idxmax()]
     return {
@@ -38,7 +38,7 @@ def get_best_post(df_posts: pd.DataFrame) -> (str, str, str, str, str):
     }
 
 
-def get_commented_post(df_posts: pd.DataFrame) -> (str, str, str, str, str):
+def get_commented_post(df_posts: pd.DataFrame) -> dict[str, str]:
     """Most commented post."""
     subset = df_posts[~df_posts.title.str.startswith("Forum Libre")]
     commented_post = subset.loc[subset["num_comments"].idxmax()]
@@ -51,7 +51,7 @@ def get_commented_post(df_posts: pd.DataFrame) -> (str, str, str, str, str):
     }
 
 
-def get_best_comment(df_comments: pd.DataFrame) -> (str, str, str, str, str):
+def get_best_comment(df_comments: pd.DataFrame) -> dict[str, str]:
     """Comment with the best score."""
     best_comment = df_comments.loc[df_comments["score"].idxmax()]
     return {
@@ -63,7 +63,7 @@ def get_best_comment(df_comments: pd.DataFrame) -> (str, str, str, str, str):
     }
 
 
-def get_worst_comment(df_comments: pd.DataFrame) -> (str, str, str, str, str):
+def get_worst_comment(df_comments: pd.DataFrame) -> dict[str, str]:
     """Comment with the worst score."""
     worst_comment = df_comments.loc[df_comments["score"].idxmin()]
     return {
@@ -77,7 +77,7 @@ def get_worst_comment(df_comments: pd.DataFrame) -> (str, str, str, str, str):
 
 def get_discussed_comment(
     reddit: praw.Reddit, df_comments: pd.DataFrame
-) -> (str, str, str, str, str):
+) -> dict[str, str]:
     """Comment with the most answers."""
     subset = df_comments[df_comments.parent.str.startswith("t1_")][
         "parent"
@@ -105,14 +105,14 @@ def get_discussed_comment(
         comment.refresh()
         return {
             "discussed_comment_author": comment.author,
-            "discussed_comment_answers": len(comment.replies),
+            "discussed_comment_answers": str(len(comment.replies)),
             "discussed_comment_body": sanitize_long_text(comment.body),
             "discussed_comment_link": f"https://reddit.com{comment.permalink}",
             "discussed_comment_id": discussed_parent_id,
         }
 
 
-def get_amoureux(df_comments: pd.DataFrame) -> (str, str, str):
+def get_amoureux(df_comments: pd.DataFrame) -> dict[str, str]:
     """Two users that interacted with each other the most."""
     # filter comments answering to another comment
     subset = df_comments[df_comments.parent.str.startswith("t1_")]
@@ -132,7 +132,7 @@ def get_amoureux(df_comments: pd.DataFrame) -> (str, str, str):
     }
 
 
-def get_qualite(df_comments: pd.DataFrame) -> (str, str):
+def get_qualite(df_comments: pd.DataFrame) -> dict[str, str]:
     """From : https://www.reddit.com/r/BestOfFrance/wiki/index
     Le prix qualité récompense le participant qui a le meilleur rapport "karma par caractère tapés".
     Pour prétendre à ce titre, il faut avoir contribué au moins 140 caractères dans la journée.
@@ -147,7 +147,7 @@ def get_qualite(df_comments: pd.DataFrame) -> (str, str):
     }
 
 
-def get_poc(df_comments: pd.DataFrame) -> (str, str):
+def get_poc(df_comments: pd.DataFrame) -> dict[str, str]:
     """User that posted the most comments."""
     poc = df_comments["author"].value_counts()
     return {
@@ -156,7 +156,7 @@ def get_poc(df_comments: pd.DataFrame) -> (str, str):
     }
 
 
-def get_tartine(df_comments: pd.DataFrame) -> (str, str):
+def get_tartine(df_comments: pd.DataFrame) -> dict[str, str]:
     """User that typed the most characters."""
     subset = df_comments.groupby(["author"]).sum()["length"]
     return {
@@ -165,7 +165,7 @@ def get_tartine(df_comments: pd.DataFrame) -> (str, str):
     }
 
 
-def get_capslock(df_comments: pd.DataFrame) -> (str, str):
+def get_capslock(df_comments: pd.DataFrame) -> dict[str, str]:
     """User that typed the most uppercase characters."""
     subset = df_comments
     subset["capslock"] = subset["body"].str.count(r"[A-Z]")
@@ -176,7 +176,7 @@ def get_capslock(df_comments: pd.DataFrame) -> (str, str):
     }
 
 
-def get_indecision(df_comments: pd.DataFrame) -> (str, str):
+def get_indecision(df_comments: pd.DataFrame) -> dict[str, str]:
     """User that typed the most ? characters"""
     # TODO only count unique questions and not all ? instances
     subset = df_comments
@@ -188,7 +188,7 @@ def get_indecision(df_comments: pd.DataFrame) -> (str, str):
     }
 
 
-def get_jackpot(df_comments: pd.DataFrame) -> (str, str):
+def get_jackpot(df_comments: pd.DataFrame) -> dict[str, str]:
     """User that gained the most karma."""
     subset = df_comments.groupby(["author"]).sum()["score"]
     return {
@@ -197,7 +197,7 @@ def get_jackpot(df_comments: pd.DataFrame) -> (str, str):
     }
 
 
-def get_krach(df_comments: pd.DataFrame) -> (str, str):
+def get_krach(df_comments: pd.DataFrame) -> dict[str, str]:
     """User that lost the most karma."""
     subset = df_comments.groupby(["author"]).sum()["score"]
     return {
