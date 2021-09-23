@@ -104,7 +104,7 @@ def get_data(reddit, post_ids: list) -> (list, list):
                         {
                             "id": comment.id,
                             "score": comment.score,
-                            "author": author,
+                            "author": utils.sanitize_username("/u/" + author),
                             "permalink": f"https://reddit.com{comment.permalink}",
                             "body": body,
                             "parent": comment.parent_id,
