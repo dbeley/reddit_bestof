@@ -1,0 +1,1 @@
+Félicitations, ce commentaire a été sélectionné dans [le bestof](${reddit_bestof_url}) !

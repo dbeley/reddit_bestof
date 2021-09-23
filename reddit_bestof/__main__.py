@@ -115,13 +115,13 @@ def get_data(reddit, post_ids: list) -> (list, list):
     return posts, comments
 
 
-def redditconnect(config_section: str):
+def redditconnect(config_section: str) -> praw.Reddit:
     user_agent = "python:script:reddit_bestof"
     reddit = praw.Reddit(config_section, user_agent=user_agent)
     return reddit
 
 
-def get_env_title(post_env: dict, day: str) -> str:
+def get_env_title(post_env: dict, day: str) -> dict:
     y, m, d = [int(x) for x in day.split("-", 3)]
     date = datetime(y, m, d).strftime("%A %d %b %Y")
     return {
@@ -132,7 +132,7 @@ def get_env_title(post_env: dict, day: str) -> str:
 
 def get_env_post(
     reddit: praw.Reddit, df_posts: pd.DataFrame, df_comments: pd.DataFrame
-) -> str:
+) -> dict:
     """Create stats from posts and comments."""
     number_total_posts = len(df_posts)
     number_total_comments = len(df_comments)
@@ -208,13 +208,10 @@ def read_template(file: str) -> str:
     return Template(content)
 
 
-def notify_winners(
-    reddit: praw.Reddit, submission: praw.models.Submission, env_post: dict
-):
+def notify_winners(reddit: praw.Reddit, message: str, env_post: dict):
     logger.warning(
         f"Notifying winners. Don't do this if you're just testing the script!"
     )
-    message_text_comment = f"Félicitations, ce commentaire a été sélectionné dans [le bestof]({'https://reddit.com' + submission.permalink}) !"
     winning_comments = set(
         [
             env_post["best_comment_id"],
@@ -224,18 +221,24 @@ def notify_winners(
     )
     for i in winning_comments:
         comment = reddit.comment(i)
-        logger.info(f"comment.reply({message_text_comment})")
-        comment.reply(message_text_comment)
+        logger.info(f"Sending message to comment {i}.")
+        # comment.reply(message)
 
 
 def main():
     args = parse_args()
     if not args.post_subreddit and not args.no_posting:
         raise ValueError("Post Subreddit not set (use the -p argument).")
+    if args.notify_winners and not args.template_file_message:
+        raise ValueError(
+            f"You need to set -m/--template_file_message if you enable --notify_winners."
+        )
     if not Path(args.template_file).is_file():
-        raise ValueError(f"File {args.template_file} does not exist.")
+        raise FileNotFoundError(f"File {args.template_file} does not exist.")
     if not Path(args.template_file_title).is_file():
-        raise ValueError(f"File {args.template_file_title} does not exist.")
+        raise FileNotFoundError(f"File {args.template_file_title} does not exist.")
+    if not Path(args.template_file_message).is_file():
+        raise FileNotFoundError(f"File {args.template_file_message} does not exist.")
 
     reddit = redditconnect("bot")
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
@@ -289,7 +292,13 @@ def main():
             title=post_title, selftext=formatted_message
         )
         if args.notify_winners and not args.test:
-            notify_winners(reddit, submission, env_post)
+            env_message = {
+                "reddit_bestof_url": f"https://reddit.com{submission.permalink}"
+            }
+            notify_winners_message = read_template(
+                args.template_file_message
+            ).safe_substitute(env_message)
+            notify_winners(reddit, notify_winners_message, env_post)
     else:
         logger.info(
             f"Posting is disabled\nTitle: {post_title}\nContent: {formatted_message}"
@@ -332,9 +341,15 @@ def parse_args():
         required=True,
     )
     parser.add_argument(
+        "-m",
+        "--template_file_message",
+        help="Template file containing the message for the winner's notification (required if --notify-winners is set)",
+        type=str,
+    )
+    parser.add_argument(
         "-d",
         "--day",
-        help="Report day in format YYYY-MM-DD (default: current day)",
+        help="Report day in format YYYY-MM-DD (optional, if not set: current day)",
         type=str,
     )
     parser.add_argument(
@@ -357,7 +372,7 @@ def parse_args():
     )
     parser.add_argument(
         "--notify_winners",
-        help="Send a message to winners.",
+        help="Send a message to winners",
         dest="notify_winners",
         action="store_true",
     )

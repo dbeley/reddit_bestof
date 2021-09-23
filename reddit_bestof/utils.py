@@ -26,7 +26,7 @@ def sanitize_username(username: str) -> str:
         return username
 
 
-def get_best_post(df_posts: pd.DataFrame) -> (str, str, str, str):
+def get_best_post(df_posts: pd.DataFrame) -> (str, str, str, str, str):
     """Post with the best score."""
     best_post = df_posts.loc[df_posts["score"].idxmax()]
     return {
@@ -38,7 +38,7 @@ def get_best_post(df_posts: pd.DataFrame) -> (str, str, str, str):
     }
 
 
-def get_commented_post(df_posts: pd.DataFrame) -> (str, str, str, str):
+def get_commented_post(df_posts: pd.DataFrame) -> (str, str, str, str, str):
     """Most commented post."""
     subset = df_posts[~df_posts.title.str.startswith("Forum Libre")]
     commented_post = subset.loc[subset["num_comments"].idxmax()]
@@ -51,7 +51,7 @@ def get_commented_post(df_posts: pd.DataFrame) -> (str, str, str, str):
     }
 
 
-def get_best_comment(df_comments: pd.DataFrame) -> (str, str, str, str):
+def get_best_comment(df_comments: pd.DataFrame) -> (str, str, str, str, str):
     """Comment with the best score."""
     best_comment = df_comments.loc[df_comments["score"].idxmax()]
     return {
@@ -63,7 +63,7 @@ def get_best_comment(df_comments: pd.DataFrame) -> (str, str, str, str):
     }
 
 
-def get_worst_comment(df_comments: pd.DataFrame) -> (str, str, str, str):
+def get_worst_comment(df_comments: pd.DataFrame) -> (str, str, str, str, str):
     """Comment with the worst score."""
     worst_comment = df_comments.loc[df_comments["score"].idxmin()]
     return {
@@ -77,7 +77,7 @@ def get_worst_comment(df_comments: pd.DataFrame) -> (str, str, str, str):
 
 def get_discussed_comment(
     reddit: praw.Reddit, df_comments: pd.DataFrame
-) -> (str, str, str, str):
+) -> (str, str, str, str, str):
     """Comment with the most answers."""
     subset = df_comments[df_comments.parent.str.startswith("t1_")][
         "parent"
