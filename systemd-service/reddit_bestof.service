@@ -5,7 +5,7 @@ Description=reddit_bestof.service
 Type=oneshot
 WorkingDirectory=%h/Documents/reddit_bestof
 # With pipenv
-ExecStart=%h/Documents/reddit_bestof/.venv/bin/reddit_bestof -s france -f template_bestoffrance.txt -t template_bestoffrance_title.txt -p bestoffrance --notify_winners
+ExecStart=%h/Documents/reddit_bestof/.venv/bin/reddit_bestof -s france -f templates/template_bestoffrance_post.txt -t templates/template_bestoffrance_title.txt -m templates/template_bestoffrance_message.txt -p bestoffrance --notify_winners
 
 [Install]
 WantedBy=multi-user.target
