@@ -2,7 +2,12 @@
 
 Work-in-progress.
 
-`reddit_bestof` is a python tool used to generate the reports at [**/r/BestOfFrance2**](https://reddit.com/r/bestoffrance2).
+`reddit_bestof` is a python tool used to generate reddit best-of reports.
+
+You can see it in action here:
+
+- [**/r/BestOfFrance**](https://reddit.com/r/bestoffrance)
+- [**/r/BestOfFrance2**](https://reddit.com/r/bestoffrance2) (inactive)
 
 It is intended to be run every day at 9 pm. It will:
 
@@ -42,8 +47,9 @@ reddit_bestof -h
 
 ```
 usage: reddit_bestof [-h] [--debug] -s SUBREDDIT -f TEMPLATE_FILE -t
-                     TEMPLATE_FILE_TITLE [-d DAY] [-p POST_SUBREDDIT]
-                     [--no_posting] [--test] [--notify_winners]
+                     TEMPLATE_FILE_TITLE [-m TEMPLATE_FILE_MESSAGE] [-d DAY]
+                     [-p POST_SUBREDDIT] [--no_posting] [--test]
+                     [--notify_winners]
 
 Create and send Reddit BestOf reports.
 
@@ -58,6 +64,9 @@ optional arguments:
   -t TEMPLATE_FILE_TITLE, --template_file_title TEMPLATE_FILE_TITLE
                         Template file containing the title of the post
                         (required)
+  -m TEMPLATE_FILE_MESSAGE, --template_file_message TEMPLATE_FILE_MESSAGE
+                        Template file containing the message for the winner's
+                        notification (required if --notify-winners is set)
   -d DAY, --day DAY     Report day in format YYYY-MM-DD (optional, if not set:
                         current day)
   -p POST_SUBREDDIT, --post_subreddit POST_SUBREDDIT
@@ -92,8 +101,8 @@ You can schedule the script to run every day at a specific time (by default 21:0
 ```
 cp systemd-service/* ~/.config/systemd/user
 systemctl --user daemon-reload
-systemctl --user enable --now reddit_bestof.timer
-systemctl --user start reddit_bestof
+systemctl --user enable --now reddit_bestof.timer # enable the timer
+systemctl --user start reddit_bestof # you can also run the service manually
 ```
 
 ## Scripts
@@ -125,3 +134,4 @@ optional arguments:
 - add records for each category
 - add gilded comments
 - improve datetime handling
+- add notifications to all users mentionned

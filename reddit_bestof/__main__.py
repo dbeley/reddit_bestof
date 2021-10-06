@@ -229,17 +229,21 @@ def notify_winners(reddit: praw.Reddit, message: str, env_post: dict):
 def main():
     args = parse_args()
     if not args.post_subreddit and not args.no_posting:
-        raise ValueError("Post Subreddit not set (use the -p argument).")
+        raise ValueError(
+            "Post Subreddit not set (use the -p argument). Use --no-posting if you don't want to post the report on Reddit."
+        )
     if args.notify_winners and not args.template_file_message:
         raise ValueError(
             f"You need to set -m/--template_file_message if you enable --notify_winners."
         )
     if not Path(args.template_file).is_file():
-        raise FileNotFoundError(f"File {args.template_file} does not exist.")
+        raise FileNotFoundError(f"Template {args.template_file} does not exist.")
     if not Path(args.template_file_title).is_file():
-        raise FileNotFoundError(f"File {args.template_file_title} does not exist.")
+        raise FileNotFoundError(f"Template {args.template_file_title} does not exist.")
     if not Path(args.template_file_message).is_file():
-        raise FileNotFoundError(f"File {args.template_file_message} does not exist.")
+        raise FileNotFoundError(
+            f"Template {args.template_file_message} does not exist."
+        )
 
     reddit = redditconnect("bot")
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
@@ -263,7 +267,7 @@ def main():
 
     if len(post_ids) == 0:
         raise ValueError(
-            f"No /r/{args.subreddit} posts were found for {day} (between {min_timestamp} and {max_timestamp})."
+            f"No posts were found on /r/{args.subreddit} for {day} (between {min_timestamp} and {max_timestamp})."
         )
 
     # Extract current data with praw
