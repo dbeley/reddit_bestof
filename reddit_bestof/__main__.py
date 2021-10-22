@@ -230,20 +230,28 @@ def main():
     args = parse_args()
     if not args.post_subreddit and not args.no_posting:
         raise ValueError(
-            "Post Subreddit not set (use the -p argument). Use --no-posting if you don't want to post the report on Reddit."
-        )
-    if args.notify_winners and not args.template_file_message:
-        raise ValueError(
-            f"You need to set -m/--template_file_message if you enable --notify_winners."
+            "You need to set -p/--post_subreddit. You can disable posting with --no-posting."
         )
     if not Path(args.template_file).is_file():
         raise FileNotFoundError(f"Template {args.template_file} does not exist.")
-    if not Path(args.template_file_title).is_file():
-        raise FileNotFoundError(f"Template {args.template_file_title} does not exist.")
-    if not Path(args.template_file_message).is_file():
-        raise FileNotFoundError(
-            f"Template {args.template_file_message} does not exist."
-        )
+    if not args.no_posting:
+        if not args.template_file_title:
+            raise ValueError(
+                f"You need to set -t/--template_file_title. You can disable posting with --no_posting."
+            )
+        if not Path(args.template_file_title).is_file():
+            raise FileNotFoundError(
+                f"Template {args.template_file_title} does not exist."
+            )
+        if args.notify_winners:
+            if not args.template_file_message:
+                raise ValueError(
+                    f"You need to set -m/--template_file_message if you enable --notify_winners."
+                )
+            if not Path(args.template_file_message).is_file():
+                raise FileNotFoundError(
+                    f"Template {args.template_file_message} does not exist."
+                )
 
     reddit = redditconnect("bot")
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
@@ -288,8 +296,8 @@ def main():
         f.write(formatted_message)
 
     env_title = get_env_title(env_post, report_day)
-    post_title = read_template(args.template_file_title).safe_substitute(env_title)
     if not args.no_posting:
+        post_title = read_template(args.template_file_title).safe_substitute(env_title)
         logger.info(
             f"Sending post to {args.post_subreddit}\nTitle: {post_title}\nContent: {formatted_message}"
         )
@@ -305,9 +313,7 @@ def main():
             ).safe_substitute(env_message)
             notify_winners(reddit, notify_winners_message, env_post)
     else:
-        logger.info(
-            f"Posting is disabled\nTitle: {post_title}\nContent: {formatted_message}"
-        )
+        logger.info(f"Posting is disabled\nContent: {formatted_message}")
 
     logger.info("Runtime: %.2f seconds." % (time.time() - START_TIME))
 
@@ -341,9 +347,8 @@ def parse_args():
     parser.add_argument(
         "-t",
         "--template_file_title",
-        help="Template file containing the title of the post (required)",
+        help="Template file containing the title of the post (required if not using --no_posting)",
         type=str,
-        required=True,
     )
     parser.add_argument(
         "-m",
