@@ -26,6 +26,10 @@ def sanitize_username(username: str) -> str:
         return username
 
 
+def sanitize_link(link: str) -> str:
+    return f"https://reddit.com{link}?context=2"
+
+
 def get_best_post(df_posts: pd.DataFrame) -> dict[str, str]:
     """Post with the best score."""
     best_post = df_posts.loc[df_posts["score"].idxmax()]

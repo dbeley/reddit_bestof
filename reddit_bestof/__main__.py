@@ -106,7 +106,7 @@ def get_data(reddit, post_ids: list) -> Tuple[list, list]:
                             "id": comment.id,
                             "score": comment.score,
                             "author": utils.sanitize_username("/u/" + author),
-                            "permalink": f"https://reddit.com{comment.permalink}",
+                            "permalink": utils.sanitize_link(comment.permalink),
                             "body": body,
                             "parent": comment.parent_id,
                             "length": len(body),

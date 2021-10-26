@@ -1,7 +1,5 @@
 # reddit_bestof
 
-Work-in-progress.
-
 `reddit_bestof` is a python tool used to generate reddit best-of reports.
 
 You can see it in action here:
@@ -134,4 +132,4 @@ optional arguments:
 - add records for each category
 - add gilded comments
 - improve datetime handling
-- add notifications to all users mentionned
+- notify all mentioned users
