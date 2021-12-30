@@ -275,7 +275,7 @@ def main():
 
     if len(post_ids) == 0:
         raise ValueError(
-            f"No posts were found on /r/{args.subreddit} for {day} (between {min_timestamp} and {max_timestamp})."
+            f"No posts were found on /r/{args.subreddit} for {report_day} (between {min_timestamp} and {max_timestamp})."
         )
 
     # Extract current data with praw
