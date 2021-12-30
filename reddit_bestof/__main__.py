@@ -211,7 +211,7 @@ def read_template(file: str) -> Template:
 
 def notify_winners(reddit: praw.Reddit, message: str, env_post: dict):
     logger.warning(
-        f"Notifying winners. Don't do this if you're just testing the script!"
+        "Notifying winners. Don't do this if you're just testing the script!"
     )
     winning_comments = set(
         [
@@ -237,7 +237,7 @@ def main():
     if not args.no_posting:
         if not args.template_file_title:
             raise ValueError(
-                f"You need to set -t/--template_file_title. You can disable posting with --no_posting."
+                "You need to set -t/--template_file_title. You can disable posting with --no_posting."
             )
         if not Path(args.template_file_title).is_file():
             raise FileNotFoundError(
@@ -246,7 +246,7 @@ def main():
         if args.notify_winners:
             if not args.template_file_message:
                 raise ValueError(
-                    f"You need to set -m/--template_file_message if you enable --notify_winners."
+                    "You need to set -m/--template_file_message if you enable --notify_winners."
                 )
             if not Path(args.template_file_message).is_file():
                 raise FileNotFoundError(
