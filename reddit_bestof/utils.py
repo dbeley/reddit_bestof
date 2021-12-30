@@ -142,7 +142,7 @@ def get_qualite(df_comments: pd.DataFrame) -> dict[str, str]:
     Pour prétendre à ce titre, il faut avoir contribué au moins 140 caractères dans la journée.
     Le score est mesuré en milliSPHKS en l'honneur de /u/sphks qui a suggéré cette fonctionnalité (1 SPHKS = 1 point de karma par caractère)."""
     subset = df_comments.groupby(["author"]).sum()
-    subset2 = subset[subset.length > 140]
+    subset2 = subset[subset.length > 140].copy()
     subset2.loc[:, "milliSPHKS"] = subset2["score"] / subset2["length"] * 1000
     qualite_author = subset2.loc[subset2["milliSPHKS"].idxmax()]
     return {
