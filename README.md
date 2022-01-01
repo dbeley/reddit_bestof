@@ -82,7 +82,7 @@ optional arguments:
 ### Example
 
 Create a report for `/r/france` for the current day using `template_post.txt` as post template, `template_title.txt` as title template, `template_message.txt` as message template and post it to `/r/bestoffrance2`:
-```
+```bash
 reddit_bestof -s france -p bestoffrance2 -f template_post.txt -t template_title.txt -m template_message.txt
 ```
 

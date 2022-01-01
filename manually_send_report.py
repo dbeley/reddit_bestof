@@ -1,4 +1,4 @@
-""" Create and send Reddit BestOf reports. """
+"""Create and send Reddit BestOf reports."""
 import logging
 import time
 import argparse
