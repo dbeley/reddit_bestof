@@ -1,4 +1,6 @@
 import logging
+import string
+import re
 import praw
 import pandas as pd
 from collections import Counter
@@ -172,7 +174,13 @@ def get_tartine(df_comments: pd.DataFrame) -> dict[str, str]:
 def get_capslock(df_comments: pd.DataFrame) -> dict[str, str]:
     """User that typed the most uppercase characters."""
     subset = df_comments
-    subset["capslock"] = subset["body"].str.count(r"[A-Z]")
+    # replace punctuation with space so they don't count as characters in words
+    subset["body2"] = subset["body"].str.replace(
+        "[{}]".format(string.punctuation), " ", regex=True
+    )
+    subset["capslock"] = subset["body2"].apply(
+        lambda row: sum([len(x) for x in row.split() if x.isupper()])
+    )
     subset2 = subset.groupby("author").sum()["capslock"]
     return {
         "capslock_author": str(subset2.idxmax()),
@@ -182,9 +190,27 @@ def get_capslock(df_comments: pd.DataFrame) -> dict[str, str]:
 
 def get_indecision(df_comments: pd.DataFrame) -> dict[str, str]:
     """User that typed the most ? characters"""
-    # TODO only count unique questions and not all ? instances
     subset = df_comments
-    subset["question"] = subset["body"].str.count(r"[?]")
+    # delete all non-question marks characters and remove repeated question marks
+    subset["body2"] = (
+        subset["body"]
+        .str.replace(
+            "[{}]".format(string.punctuation.replace("?", "")), ".", regex=True
+        )
+        .str.replace(r"\?+", "?", regex=True)
+        .str.replace(r"\.+", ".", regex=True)
+    )
+    subset["question"] = subset["body2"].apply(
+        lambda row: len(
+            [
+                x
+                for x in row.rsplit("?", 1)[0].split("?")
+                if (x and bool(re.search(r"\w", x)))
+            ]
+        )
+        if "?" in row
+        else 0
+    )
     subset2 = subset.groupby("author").sum()["question"]
     return {
         "indecision_author": str(subset2.idxmax()),

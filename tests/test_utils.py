@@ -138,22 +138,22 @@ def test_get_tartine(test_tartine_comments_dataframe):
     assert utils.get_tartine(test_tartine_comments_dataframe) == expected_result
 
 
-# def test_get_capslock(test_capslock_comments_dataframe):
-#     expected_result = {"capslock_author": "author1", "capslock_score": 156}
+def test_get_capslock(test_capslock_comments_dataframe):
+    expected_result = {"capslock_author": "author1", "capslock_score": 44}
 
-#     print(test_capslock_comments_dataframe)
-#     print(utils.get_capslock(test_capslock_comments_dataframe))
+    print(test_capslock_comments_dataframe)
+    print(utils.get_capslock(test_capslock_comments_dataframe))
 
-#     assert utils.get_capslock(test_capslock_comments_dataframe) == expected_result
+    assert utils.get_capslock(test_capslock_comments_dataframe) == expected_result
 
 
-# def test_get_indecision(test_indecision_comments_dataframe):
-#     expected_result = {"indecision_author": "author1", "indecision_score": 156}
+def test_get_indecision(test_indecision_comments_dataframe):
+    expected_result = {"indecision_author": "author1", "indecision_score": 7}
 
-#     print(test_indecision_comments_dataframe)
-#     print(utils.get_indecision(test_indecision_comments_dataframe))
+    print(test_indecision_comments_dataframe)
+    print(utils.get_indecision(test_indecision_comments_dataframe))
 
-#     assert utils.get_indecision(test_indecision_comments_dataframe) == expected_result
+    assert utils.get_indecision(test_indecision_comments_dataframe) == expected_result
 
 
 def test_get_jackpot(test_score_comments_dataframe):

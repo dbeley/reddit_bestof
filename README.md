@@ -5,6 +5,7 @@
 You can see it in action here:
 
 - [**/r/BestOfFrance**](https://reddit.com/r/bestoffrance)
+- [**/r/BestOfRance**](https://reddit.com/r/bestofrance)
 - [**/r/BestOfFrance2**](https://reddit.com/r/bestoffrance2) (inactive)
 
 It is intended to be run every day at 9 pm. It will:
