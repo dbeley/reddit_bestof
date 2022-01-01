@@ -1,4 +1,3 @@
-import praw
 from reddit_bestof import utils
 
 

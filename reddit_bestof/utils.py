@@ -139,10 +139,12 @@ def get_amoureux(df_comments: pd.DataFrame) -> dict[str, str]:
 
 
 def get_qualite(df_comments: pd.DataFrame) -> dict[str, str]:
-    """From : https://www.reddit.com/r/BestOfFrance/wiki/index
+    """
+    From : https://www.reddit.com/r/BestOfFrance/wiki/index
     Le prix qualité récompense le participant qui a le meilleur rapport "karma par caractère tapés".
     Pour prétendre à ce titre, il faut avoir contribué au moins 140 caractères dans la journée.
-    Le score est mesuré en milliSPHKS en l'honneur de /u/sphks qui a suggéré cette fonctionnalité (1 SPHKS = 1 point de karma par caractère)."""
+    Le score est mesuré en milliSPHKS en l'honneur de /u/sphks qui a suggéré cette fonctionnalité (1 SPHKS = 1 point de karma par caractère).
+    """
     subset = df_comments.groupby(["author"]).sum()
     subset2 = subset[subset.length > 140].copy()
     subset2.loc[:, "milliSPHKS"] = subset2["score"] / subset2["length"] * 1000
@@ -189,7 +191,7 @@ def get_capslock(df_comments: pd.DataFrame) -> dict[str, str]:
 
 
 def get_indecision(df_comments: pd.DataFrame) -> dict[str, str]:
-    """User that typed the most ? characters"""
+    """User that typed the most ? characters."""
     subset = df_comments
     # delete all non-question marks characters and remove repeated question marks
     subset["body2"] = (

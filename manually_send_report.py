@@ -1,6 +1,4 @@
-"""
-Create and send Reddit BestOf reports.
-"""
+""" Create and send Reddit BestOf reports. """
 import logging
 import time
 import argparse
@@ -30,7 +28,7 @@ def read_file(file: str) -> str:
 
 
 def format_title(formatted_message: str, filename: str) -> str:
-    """Function only useful for /r/BestOfFrance2"""
+    """Function only useful for /r/BestOfFrance2."""
     day = Path(filename).stem.split("_")[0]
     y, m, d = [int(x) for x in day.split("-", 3)]
     date = datetime(y, m, d).strftime("%A %d %b %Y")

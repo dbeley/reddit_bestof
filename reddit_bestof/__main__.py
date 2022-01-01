@@ -1,6 +1,4 @@
-"""
-Create and send Reddit BestOf reports.
-"""
+"""Create and send Reddit BestOf reports."""
 import logging
 import time
 import argparse
@@ -24,12 +22,12 @@ MAX_POSTS_TO_EXTRACT = 3000
 
 def get_pushshift_data(sub: str, min_timestamp: int, max_timestamp: int) -> list:
     url = f"https://api.pushshift.io/reddit/search/submission?&size=1000&subreddit={sub}&after={min_timestamp}&before={max_timestamp}"
-    iter = 0
+    i = 0
     while True:
-        iter += 1
+        i += 1
         time.sleep(3)
         req = requests.get(url)
-        if req.status_code != 502 or iter > 5:
+        if req.status_code != 502 or i > 5:
             break
     try:
         data = json.loads(req.text)
@@ -44,8 +42,8 @@ def get_pushshift_ids(
     list_ids = []
     ids = get_pushshift_data(sub, min_timestamp, max_timestamp)
     while len(ids) > 0:
-        for id in ids:
-            list_ids.append(id["id"])
+        for i in ids:
+            list_ids.append(i["id"])
         logger.debug(f"New min timestamp = {ids[-1]['created_utc']}.")
         ids = get_pushshift_data(sub, ids[-1]["created_utc"], max_timestamp)
         if test:
@@ -69,7 +67,8 @@ def get_reddit_ids(
 
 
 def get_timestamp_range(day: str) -> Tuple[int, int]:
-    """Return the range of the report with a min and max timestamp.
+    """
+    Return the range of the report with a min and max timestamp.
 
     Example: for 2021-09-16, return the timestamp for 2021-09-15 21:00 and 2021-09-16 21:00
     """
@@ -82,13 +81,13 @@ def get_timestamp_range(day: str) -> Tuple[int, int]:
 def get_data(reddit, post_ids: list) -> Tuple[list, list]:
     posts = []
     comments = []
-    for id in tqdm(post_ids, dynamic_ncols=True):
-        submission = reddit.submission(id)
+    for i in tqdm(post_ids, dynamic_ncols=True):
+        submission = reddit.submission(i)
         author = str(submission.author)
         if author != "None" and not submission.hidden and submission.is_robot_indexable:
             posts.append(
                 {
-                    "id": id,
+                    "id": i,
                     "score": submission.score,
                     "author": utils.sanitize_username("/u/" + author),
                     "permalink": f"https://reddit.com{submission.permalink}",
