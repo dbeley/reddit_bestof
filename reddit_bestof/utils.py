@@ -139,8 +139,7 @@ def get_amoureux(df_comments: pd.DataFrame) -> dict[str, str]:
 
 
 def get_qualite(df_comments: pd.DataFrame) -> dict[str, str]:
-    """
-    From : https://www.reddit.com/r/BestOfFrance/wiki/index
+    """From : https://www.reddit.com/r/BestOfFrance/wiki/index
 
     Le prix qualité récompense le participant qui a le meilleur rapport "karma par caractère tapés".
     Pour prétendre à ce titre, il faut avoir contribué au moins 140 caractères dans la journée.

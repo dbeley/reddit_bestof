@@ -69,7 +69,8 @@ def get_reddit_ids(
 def get_timestamp_range(day: str) -> Tuple[int, int]:
     """Return the range of the report with a min and max timestamp.
 
-    Example: for 2021-09-16, return the timestamp for 2021-09-15 21:00 and 2021-09-16 21:00"""
+    Example: for 2021-09-16, return the timestamp for 2021-09-15 21:00 and 2021-09-16 21:00
+    """
     y, m, d = [int(x) for x in day.split("-", 3)]
     # needs to add 2 hours in order to have timestamp equivalent to the FR timezone.
     min_datetime = datetime(y, m, d, 23, 00) - timedelta(hours=24)
