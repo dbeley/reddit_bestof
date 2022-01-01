@@ -1,6 +1,6 @@
 # reddit_bestof
 
-[![Build Status](https://github.com/dbeley/reddit_bestof/workflows/CI/badge.svg)]
+![Build Status](https://github.com/dbeley/reddit_bestof/workflows/CI/badge.svg)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3122059a1f6548bd872ba1d583e4c2e9)](https://www.codacy.com/gh/dbeley/reddit_bestof/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dbeley/reddit_bestof&amp;utm_campaign=Badge_Grade)
 
 `reddit_bestof` is a python tool used to generate reddit best-of reports.
