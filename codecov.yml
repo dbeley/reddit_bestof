@@ -1,2 +1,8 @@
 fixes:
     - "::reddit_bestof/"
+
+coverage:
+    status:
+        project: no
+        patch: no
+        changes: no
