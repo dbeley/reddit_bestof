@@ -1,5 +1,3 @@
-import pandas as pd
-import numpy as np
 import praw
 from reddit_bestof import utils
 

@@ -1,20 +1,23 @@
 # reddit_bestof
 
+[![Build Status](https://github.com/dbeley/reddit_bestof/workflows/CI/badge.svg)]
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/3122059a1f6548bd872ba1d583e4c2e9)](https://www.codacy.com/gh/dbeley/reddit_bestof/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dbeley/reddit_bestof&amp;utm_campaign=Badge_Grade)
+
 `reddit_bestof` is a python tool used to generate reddit best-of reports.
 
 You can see it in action here:
 
-- [**/r/BestOfFrance**](https://reddit.com/r/bestoffrance)
-- [**/r/BestOfRance**](https://reddit.com/r/bestofrance)
-- [**/r/BestOfFrance2**](https://reddit.com/r/bestoffrance2) (inactive)
+-   [**/r/BestOfFrance**](https://reddit.com/r/bestoffrance)
+-   [**/r/BestOfRance**](https://reddit.com/r/bestofrance)
+-   [**/r/BestOfFrance2**](https://reddit.com/r/bestoffrance2) (inactive)
 
 It is intended to be run every day at 9 pm. It will:
 
-- extract the activity of a subreddit for the last day (from yesterday 9 pm to today 9 pm)
-- create a report from a template
-- export the report to a text file
-- (optional) send it to a new post in a subreddit of your choice
-- (optional) notify the users mentioned in the report
+-   extract the activity of a subreddit for the last day (from yesterday 9 pm to today 9 pm)
+-   create a report from a template
+-   export the report to a text file
+-   (optional) send it to a new post in a subreddit of your choice
+-   (optional) notify the users mentioned in the report
 
 It is designed to be as generic as possible so it should work with any subreddit.
 
@@ -25,14 +28,14 @@ Rename `praw_sample.ini` to `praw.ini` and put your informations in it. You can 
 ## Installation
 
 Classic installation:
-```
+```bash
 git clone https://github.com/dbeley/reddit_bestof
 cd reddit_bestof
 python setup.py
 ```
 
 Installation in a virtualenv (with pipenv):
-```
+```bash
 git clone https://github.com/dbeley/reddit_bestof
 cd reddit_bestof
 pipenv install '-e .'
@@ -40,11 +43,11 @@ pipenv install '-e .'
 
 ## Usage
 
-```
+```bash
 reddit_bestof -h
 ```
 
-```
+```text
 usage: reddit_bestof [-h] [--debug] -s SUBREDDIT -f TEMPLATE_FILE -t
                      TEMPLATE_FILE_TITLE [-m TEMPLATE_FILE_MESSAGE] [-d DAY]
                      [-p POST_SUBREDDIT] [--no_posting] [--test]
@@ -87,9 +90,9 @@ reddit_bestof -s france -p bestoffrance2 -f template_post.txt -t template_title.
 
 The script uses three templates:
 
-- post content
-- post title
-- winner message
+-   post content
+-   post title
+-   winner message
 
 See the `templates` folder for examples.
 
@@ -97,7 +100,7 @@ See the `templates` folder for examples.
 
 You can schedule the script to run every day at a specific time (by default 21:00). You will need to modify `reddit_bestof.service` to reflect your configuration.
 
-```
+```bash
 cp systemd-service/* ~/.config/systemd/user
 systemctl --user daemon-reload
 systemctl --user enable --now reddit_bestof.timer # enable the timer
@@ -106,13 +109,13 @@ systemctl --user start reddit_bestof # you can also run the service manually
 
 ## Scripts
 
-- `manually_send_report.py`: manually send a report created with `reddit_bestof`
+-   `manually_send_report.py`: manually send a report created with `reddit_bestof`
 
-```
+```bash
 python manually_send_report.py -h
 ```
 
-```
+```text
 usage: manually_send_report.py [-h] [--debug] -p POST_SUBREDDIT -f FILE
                                [--no_posting]
 
@@ -130,7 +133,7 @@ optional arguments:
 
 ## TODO
 
-- add records for each category
-- add gilded comments
-- improve datetime handling
-- notify all mentioned users
+-   add records for each category
+-   add gilded comments
+-   improve datetime handling
+-   notify all mentioned users
