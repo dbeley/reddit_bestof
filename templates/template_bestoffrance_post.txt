@@ -1,4 +1,6 @@
-##Total ${number_total_posts} posts, ${number_total_comments} commentaires, ${number_unique_users} participants
+# [BestOf] ${subreddit} du ${date}
+
+## Total ${number_total_posts} posts, ${number_total_comments} commentaires, ${number_unique_users} participants
 
 ---
 
@@ -46,4 +48,4 @@ par ${discussed_comment_author} avec **${discussed_comment_answers} réponses**
 * Karma-Krach : ${krach_author} avec **${krach_score}** points!
 
 ---
-^^reddit_bestof ^^[v0.3](https://www.github.com/dbeley/reddit_bestof) ^^maintenu ^^par ^^/u/bloub-bloub, ^^idée ^^originale ^^de ^^/u/mudpizza
+^^[reddit_bestof](https://www.github.com/dbeley/reddit_bestof) ^^maintenu ^^par ^^/u/^^bloub-bloub, ^^idée ^^originale ^^de ^^/u/^^mudpizza

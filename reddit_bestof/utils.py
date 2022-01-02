@@ -17,7 +17,7 @@ def sanitize_comment_body(body: str) -> str:
     return result
 
 
-def sanitize_long_text(text: str) -> str:
+def sanitize_long_text(text: str, max_length: int = 150) -> str:
     """Sanitize long text.
 
     Return 150 characters or less from any text.
@@ -25,7 +25,6 @@ def sanitize_long_text(text: str) -> str:
     cut it at 149 characters and add a … at the end of it.
     """
     text = text.replace("\n", "")
-    max_length = 150
     if len(text) >= max_length:
         return text[0 : max_length - 1].rsplit(" ", 1)[0] + "…"
     return text

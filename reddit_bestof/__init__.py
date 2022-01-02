@@ -3,6 +3,6 @@
 
 """Create and send Reddit BestOf reports."""
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 name = "reddit_bestof"

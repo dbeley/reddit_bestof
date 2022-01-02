@@ -121,19 +121,16 @@ def redditconnect(config_section: str) -> praw.Reddit:
     return reddit
 
 
-def get_env_title(post_env: dict, day: str) -> dict:
-    y, m, d = [int(x) for x in day.split("-", 3)]
-    date = datetime(y, m, d).strftime("%A %d %b %Y")
-    return {
-        "date": date,
-        "title": post_env["best_comment_body"],
-    }
-
-
 def get_env_post(
-    reddit: praw.Reddit, df_posts: pd.DataFrame, df_comments: pd.DataFrame
+    reddit: praw.Reddit,
+    df_posts: pd.DataFrame,
+    df_comments: pd.DataFrame,
+    day: str,
+    subreddit: str,
 ) -> dict:
     """Create stats from posts and comments."""
+    y, m, d = [int(x) for x in day.split("-", 3)]
+    date = datetime(y, m, d).strftime("%A %d %b %Y")
     number_total_posts = len(df_posts)
     number_total_comments = len(df_comments)
     number_unique_users = len(
@@ -154,6 +151,8 @@ def get_env_post(
     krach_stat = utils.get_krach(df_comments)
 
     return {
+        "date": date,
+        "subreddit": subreddit,
         "number_total_posts": number_total_posts,
         "number_total_comments": number_total_comments,
         "number_unique_users": number_unique_users,
@@ -285,7 +284,7 @@ def main():
     df_comments = pd.DataFrame(comments)
 
     # Stats calculation + template evaluation
-    env_post = get_env_post(reddit, df_posts, df_comments)
+    env_post = get_env_post(reddit, df_posts, df_comments, args.day, args.subreddit)
     formatted_message = read_template(args.template_file).safe_substitute(env_post)
 
     filename = f"{report_day}_{args.subreddit}_{int(START_TIME)}.txt"
@@ -294,7 +293,11 @@ def main():
     with open(f"Exports/{filename}", "w") as f:
         f.write(formatted_message)
 
-    env_title = get_env_title(env_post, report_day)
+    env_title = {
+        "date": env_post["date"],
+        "subreddit": env_post["subreddit"],
+        "title": env_post["best_comment_body"],
+    }
     if not args.no_posting:
         post_title = read_template(args.template_file_title).safe_substitute(env_title)
         logger.info(

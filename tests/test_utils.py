@@ -15,6 +15,10 @@ def test_sanitize_long_text():
     assert utils.sanitize_long_text(small_text) == small_text
     assert utils.sanitize_long_text(long_text) == long_text_expected
 
+    small_text2 = "1234"
+    small_text2_expected = "123…"
+    assert utils.sanitize_long_text(small_text2, 4) == small_text2_expected
+
 
 def test_sanitize_username():
     unknown_username = "None"
