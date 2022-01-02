@@ -9,11 +9,21 @@ logger = logging.getLogger(__name__)
 
 
 def sanitize_comment_body(body: str) -> str:
+    """Sanitize comment body.
+
+    Delete newline characters and quotes in comments (lines beginning with >).
+    """
     result = " ".join([x for x in body.split("\n") if not x.startswith(">")]).strip()
     return result
 
 
 def sanitize_long_text(text: str) -> str:
+    """Sanitize long text.
+
+    Return 150 characters or less from any text.
+    If the text is longer than 150 characters long,
+    cut it at 149 characters and add a … at the end of it.
+    """
     text = text.replace("\n", "")
     max_length = 150
     if len(text) >= max_length:
@@ -22,6 +32,7 @@ def sanitize_long_text(text: str) -> str:
 
 
 def sanitize_username(username: str) -> str:
+    """Sanitize an username."""
     if username in ["None", "/u/None"]:
         return "un inconnu"
     else:
@@ -29,6 +40,7 @@ def sanitize_username(username: str) -> str:
 
 
 def sanitize_link(link: str) -> str:
+    """Sanitize link."""
     return f"https://reddit.com{link}?context=2"
 
 
@@ -45,7 +57,10 @@ def get_best_post(df_posts: pd.DataFrame) -> dict[str, str]:
 
 
 def get_commented_post(df_posts: pd.DataFrame) -> dict[str, str]:
-    """Most commented post."""
+    """Most commented post.
+
+    Forum Libre posts are filtered out as they generally have a lot of comments.
+    """
     subset = df_posts[~df_posts.title.str.startswith("Forum Libre")]
     commented_post = subset.loc[subset["num_comments"].idxmax()]
     return {
@@ -84,7 +99,11 @@ def get_worst_comment(df_comments: pd.DataFrame) -> dict[str, str]:
 def get_discussed_comment(
     reddit: praw.Reddit, df_comments: pd.DataFrame
 ) -> dict[str, str]:
-    """Comment with the most answers."""
+    """Comment with the most answers.
+
+    The most discussed comment might not be in df_comments
+    so we extract it separately.
+    """
     subset = df_comments[df_comments.parent.str.startswith("t1_")][
         "parent"
     ].value_counts()
@@ -174,7 +193,10 @@ def get_tartine(df_comments: pd.DataFrame) -> dict[str, str]:
 
 
 def get_capslock(df_comments: pd.DataFrame) -> dict[str, str]:
-    """User that typed the most uppercase characters."""
+    """User that typed the most uppercase characters.
+
+    Only the characters from full uppercase words are taken into account.
+    """
     subset = df_comments
     # replace punctuation with space so they don't count as characters in words
     subset["body2"] = subset["body"].str.replace(
@@ -191,7 +213,11 @@ def get_capslock(df_comments: pd.DataFrame) -> dict[str, str]:
 
 
 def get_indecision(df_comments: pd.DataFrame) -> dict[str, str]:
-    """User that typed the most ? characters."""
+    """User that asked the most questions.
+
+    A question is defined as a string containing at least
+    one alphanumerical character and ending with at least one question mark.
+    """
     subset = df_comments
     # delete all non-question marks characters and remove repeated question marks
     subset["body2"] = (
