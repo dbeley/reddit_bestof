@@ -8,6 +8,13 @@ def test_sanitize_comment_body():
     assert utils.sanitize_comment_body(comment_body) == comment_body_expected
 
 
+def test_sanitize_comment_body_with_brackets():
+    comment_body = "Blablablah [ test ]] line of text ["
+
+    comment_body_expected = "Blablablah \\[ test \\]\\] line of text \\["
+    assert utils.sanitize_comment_body(comment_body) == comment_body_expected
+
+
 def test_sanitize_long_text():
     small_text = "abcdefg"
     long_text = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
