@@ -284,7 +284,7 @@ def main():
     df_comments = pd.DataFrame(comments)
 
     # Stats calculation + template evaluation
-    env_post = get_env_post(reddit, df_posts, df_comments, args.day, args.subreddit)
+    env_post = get_env_post(reddit, df_posts, df_comments, report_day, args.subreddit)
     formatted_message = read_template(args.template_file).safe_substitute(env_post)
 
     filename = f"{report_day}_{args.subreddit}_{int(START_TIME)}.txt"

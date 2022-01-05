@@ -1,5 +1,3 @@
-# [BestOf] ${subreddit} du ${date}
-
 ## Total ${number_total_posts} posts, ${number_total_comments} commentaires, ${number_unique_users} participants
 
 ---
