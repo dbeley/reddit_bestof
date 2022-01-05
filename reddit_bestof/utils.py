@@ -12,8 +12,15 @@ def sanitize_comment_body(body: str) -> str:
     """Sanitize comment body.
 
     Delete newline characters and quotes in comments (lines beginning with >).
+    Escape [ and ] characters.
     """
-    result = " ".join([x for x in body.split("\n") if not x.startswith(">")]).strip()
+    result = " ".join(
+        [
+            x
+            for x in body.replace("[", "\\[").replace("]", "\\]").split("\n")
+            if not x.startswith(">")
+        ]
+    ).strip()
     return result
 
 
@@ -34,8 +41,7 @@ def sanitize_username(username: str) -> str:
     """Sanitize an username."""
     if username in ["None", "/u/None"]:
         return "un inconnu"
-    else:
-        return username
+    return username
 
 
 def sanitize_link(link: str) -> str:
