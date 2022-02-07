@@ -223,9 +223,12 @@ def notify_winners(reddit: praw.Reddit, message: str, env_post: dict):
         ]
     )
     for i in winning_comments:
-        comment = reddit.comment(i)
-        logger.info(f"Sending message to comment {i}.")
-        comment.reply(message)
+        try:
+            comment = reddit.comment(i)
+            logger.info(f"Sending message to comment {i}.")
+            comment.reply(message)
+        except Exception as e:
+            logger.warning(e)
 
 
 def main():
