@@ -11,6 +11,15 @@ def test_day_timestamp():
     assert get_timestamp_range("day", "2021-11-02") == result
 
 
+def test_day_end_of_month_timestamp():
+    result = (
+        "du Monday 01 Feb 2021",
+        int(datetime(2021, 1, 31, 23, 00).timestamp()),
+        int(datetime(2021, 2, 1, 23, 00).timestamp()),
+    )
+    assert get_timestamp_range("day", "2021-02-01") == result
+
+
 def test_month_timestamp():
     result = (
         "du mois de Mar 2021",
