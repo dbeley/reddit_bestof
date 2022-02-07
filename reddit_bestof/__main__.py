@@ -83,7 +83,11 @@ def get_data(reddit, post_ids: list) -> Tuple[list, list]:
     for i in tqdm(post_ids, dynamic_ncols=True):
         submission = reddit.submission(i)
         author = str(submission.author)
-        if author != "None" and not submission.hidden and submission.is_robot_indexable:
+        if (
+            author.lower() not in ["none"]
+            and not submission.hidden
+            and submission.is_robot_indexable
+        ):
             posts.append(
                 {
                     "id": i,
@@ -98,7 +102,7 @@ def get_data(reddit, post_ids: list) -> Tuple[list, list]:
             submission.comments.replace_more(limit=None)
             for comment in submission.comments.list():
                 author = str(comment.author)
-                if author != "None":
+                if author.lower() not in ["none", "automoderator"]:
                     body = utils.sanitize_comment_body(comment.body)
                     comments.append(
                         {
