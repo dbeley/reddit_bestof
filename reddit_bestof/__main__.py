@@ -7,12 +7,12 @@ import locale
 import requests
 import praw
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from string import Template
 from tqdm import tqdm
 from typing import Tuple
-from . import utils
+from . import utils, date_utils
 
 logger = logging.getLogger()
 logging.getLogger("praw").setLevel(logging.WARNING)
@@ -64,17 +64,6 @@ def get_reddit_ids(
         if i["timestamp"] >= min_timestamp and i["timestamp"] <= max_timestamp
     ]
     return post_ids
-
-
-def get_timestamp_range(day: str) -> Tuple[int, int]:
-    """Return the range of the report with a min and max timestamp.
-
-    Example: for 2021-09-16, return the timestamp for 2021-09-15 21:00 and 2021-09-16 21:00
-    """
-    y, m, d = [int(x) for x in day.split("-", 3)]
-    # needs to add 2 hours in order to have timestamp equivalent to the FR timezone.
-    min_datetime = datetime(y, m, d, 23, 00) - timedelta(hours=24)
-    return int(min_datetime.timestamp()), int(datetime(y, m, d, 23, 00).timestamp())
 
 
 def get_data(reddit, post_ids: list) -> Tuple[list, list]:
@@ -129,12 +118,10 @@ def get_env_post(
     reddit: praw.Reddit,
     df_posts: pd.DataFrame,
     df_comments: pd.DataFrame,
-    day: str,
+    formatted_date: str,
     subreddit: str,
 ) -> dict:
     """Create stats from posts and comments."""
-    y, m, d = [int(x) for x in day.split("-", 3)]
-    date = datetime(y, m, d).strftime("%A %d %b %Y")
     number_total_posts = len(df_posts)
     number_total_comments = len(df_comments)
     number_unique_users = len(
@@ -155,7 +142,7 @@ def get_env_post(
     krach_stat = utils.get_krach(df_comments)
 
     return {
-        "date": date,
+        "date": formatted_date,
         "subreddit": subreddit,
         "number_total_posts": number_total_posts,
         "number_total_comments": number_total_comments,
@@ -233,6 +220,38 @@ def notify_winners(reddit: praw.Reddit, message: str, env_post: dict):
 
 def main():
     args = parse_args()
+
+    if args.timeframe == "day":
+        report_date = datetime.now().strftime("%Y-%m-%d") if not args.day else args.day
+        formatted_date, min_timestamp, max_timestamp = date_utils.get_timestamp_range(
+            args.timeframe, report_date
+        )
+    elif args.timeframe == "month":
+        logger.warning(
+            f"Be aware that creating a monthly report for a very large subreddit will take a long time or simply won't work."
+        )
+        report_date = datetime.now().strftime("%Y-%m") if not args.month else args.month
+        formatted_date, min_timestamp, max_timestamp = date_utils.get_timestamp_range(
+            args.timeframe, report_date
+        )
+    elif args.timeframe == "year":
+        logger.warning(
+            f"Be aware that creating a yearly report for a very large subreddit will take a very long time or simply won't work."
+        )
+        report_date = datetime.now().strftime("%Y") if not args.year else args.year
+        formatted_date, min_timestamp, max_timestamp = date_utils.get_timestamp_range(
+            args.timeframe, report_date
+        )
+    else:
+        raise ValueError(
+            f"Value {args.timeframe} for timeframe is invalid. Accepted values are day, month, year."
+        )
+    logger.info(
+        f"Creating report for subreddit {args.subreddit} and day {report_date}."
+    )
+    logger.debug(f"Formatted date: {formatted_date}.")
+    logger.debug(f"Extracting data between {min_timestamp} and {max_timestamp}.")
+
     if not args.post_subreddit and not args.no_posting:
         raise ValueError(
             "You need to set -p/--post_subreddit. You can disable posting with --no-posting."
@@ -263,13 +282,9 @@ def main():
     # pd.to_string() uses this option to truncate its output
     pd.options.display.max_colwidth = None
 
-    report_day = datetime.now().strftime("%Y-%m-%d") if not args.day else args.day
-    logger.info(f"Creating report for subreddit {args.subreddit} and day {report_day}.")
-    min_timestamp, max_timestamp = get_timestamp_range(report_day)
-    logger.debug(f"Extracting data between {min_timestamp} and {max_timestamp}.")
-
-    # If a specific day is set, extract ids with pushshift, otherwise with praw
-    if args.day:
+    # If a specific day is set or the timeframe is a month or a year,
+    # extract ids with pushshift, otherwise with praw
+    if args.day or args.timeframe in ["month", "year"]:
         post_ids = get_pushshift_ids(
             args.subreddit, min_timestamp, max_timestamp, args.test
         )
@@ -280,7 +295,7 @@ def main():
 
     if len(post_ids) == 0:
         raise ValueError(
-            f"No posts were found on /r/{args.subreddit} for {report_day} (between {min_timestamp} and {max_timestamp})."
+            f"No posts were found on /r/{args.subreddit} for {report_date} (between {min_timestamp} and {max_timestamp})."
         )
 
     # Extract current data with praw
@@ -291,11 +306,13 @@ def main():
     df_comments = pd.DataFrame(comments)
 
     # Stats calculation + template evaluation
-    env_post = get_env_post(reddit, df_posts, df_comments, args.day, args.subreddit)
+    env_post = get_env_post(
+        reddit, df_posts, df_comments, formatted_date, args.subreddit
+    )
     formatted_message = read_template(args.template_file).safe_substitute(env_post)
 
-    filename = f"{report_day}_{args.subreddit}_{int(START_TIME)}.txt"
-    logger.info(f"Exporting formatted post to Exports/{filename}")
+    filename = f"{report_date}_{args.subreddit}_{int(START_TIME)}.txt"
+    logger.info(f"Exporting formatted message to Exports/{filename}")
     Path("Exports").mkdir(parents=True, exist_ok=True)
     with open(f"Exports/{filename}", "w") as f:
         f.write(formatted_message)
@@ -366,9 +383,25 @@ def parse_args():
         type=str,
     )
     parser.add_argument(
+        "--timeframe",
+        help="timeframe (day, month, year. default: day)",
+        type=str,
+        default="day",
+    )
+    parser.add_argument(
         "-d",
         "--day",
-        help="Report day in format YYYY-MM-DD (optional, if not set: current day)",
+        help="Report day in format YYYY-MM-DD (optional, active when timeframe is day, if not set: current day)",
+        type=str,
+    )
+    parser.add_argument(
+        "--month",
+        help="Report month in format YYYY-MM (optional, active when timeframe is month, if not set: current month)",
+        type=str,
+    )
+    parser.add_argument(
+        "--year",
+        help="Report year in format YYYY (optional, active when timeframe is year, if not set: current year)",
         type=str,
     )
     parser.add_argument(

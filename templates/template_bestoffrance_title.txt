@@ -1,1 +1,1 @@
-[BestOf] ${subreddit} du ${date} : ${title}
+[BestOf] ${subreddit} ${date} : ${title}

@@ -13,7 +13,7 @@ You can see it in action here:
 
 It is intended to be run every day at 9 pm. It will:
 
--   extract the activity of a subreddit for the last day (from yesterday 9 pm to today 9 pm)
+-   extract the activity of a subreddit for the period (last day from yesterday 9 pm to today 9 pm, last month, last year)
 -   create a report from a template
 -   export the report to a text file
 -   (optional) send it to a new post in a subreddit of your choice
