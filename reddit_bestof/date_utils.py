@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from typing import Tuple
+import locale
 
 
 def get_timestamp_range(type: str, value: str) -> Tuple[str, int, int]:
@@ -8,6 +9,7 @@ def get_timestamp_range(type: str, value: str) -> Tuple[str, int, int]:
 
     Example: for 2021-09-16, return the timestamp for 2021-09-15 21:00 and 2021-09-16 21:00
     """
+    locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
     # TODO better timezone handling
     # needs to add 2 hours in order to have timestamp equivalent to the FR timezone.
     if type == "day":

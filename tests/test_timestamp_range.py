@@ -4,7 +4,7 @@ from reddit_bestof.date_utils import get_timestamp_range
 
 def test_day_timestamp():
     result = (
-        "du Tuesday 02 Nov 2021",
+        "du mardi 02 nov. 2021",
         int(datetime(2021, 11, 1, 23, 00).timestamp()),
         int(datetime(2021, 11, 2, 23, 00).timestamp()),
     )
@@ -13,7 +13,7 @@ def test_day_timestamp():
 
 def test_day_end_of_month_timestamp():
     result = (
-        "du Monday 01 Feb 2021",
+        "du lundi 01 févr. 2021",
         int(datetime(2021, 1, 31, 23, 00).timestamp()),
         int(datetime(2021, 2, 1, 23, 00).timestamp()),
     )
@@ -22,7 +22,7 @@ def test_day_end_of_month_timestamp():
 
 def test_month_timestamp():
     result = (
-        "du mois de Mar 2021",
+        "du mois de mars 2021",
         int(datetime(2021, 3, 1, 2, 00).timestamp()),
         int(datetime(2021, 4, 1, 2, 00).timestamp()),
     )
@@ -31,7 +31,7 @@ def test_month_timestamp():
 
 def test_month_december_timestamp():
     result = (
-        "du mois de Dec 2021",
+        "du mois de déc. 2021",
         int(datetime(2021, 12, 1, 2, 00).timestamp()),
         int(datetime(2022, 1, 1, 2, 00).timestamp()),
     )
@@ -40,7 +40,7 @@ def test_month_december_timestamp():
 
 def test_month_january_timestamp():
     result = (
-        "du mois de Jan 2022",
+        "du mois de janv. 2022",
         int(datetime(2022, 1, 1, 2, 00).timestamp()),
         int(datetime(2022, 2, 1, 2, 00).timestamp()),
     )
