@@ -15,25 +15,25 @@ jobs:
         python-version: ["3.9", "3.10"]
 
     steps:
-      - name: SetLocale
-        run: |
-          sudo apt-get update && sudo apt-get install tzdata locales -y && sudo locale-gen fr_FR.UTF-8
-          sudo localectl set-locale LANG="fr_FR.UTF-8"
-          export LANG="fr_FR.UTF-8"
-          sudo update-locale
-          echo "Testing language settings"
-          echo "All languages..."
-          locale -a
-          echo "Actual locale"
-          locale
-          echo "Actual numeric settings"
-          locale -c -k LC_NUMERIC
-          echo "LANG Variable"
-          echo "$LANG"
-          echo "LocaleCtl"
-          localectl status
-          echo "Printing decimal"
-          printf "%'.3f\n" 123123,123
+    - name: SetLocale
+      run: |
+        sudo apt-get update && sudo apt-get install tzdata locales -y && sudo locale-gen fr_FR.UTF-8
+        sudo localectl set-locale LANG="fr_FR.UTF-8"
+        export LANG="fr_FR.UTF-8"
+        sudo update-locale
+        echo "Testing language settings"
+        echo "All languages..."
+        locale -a
+        echo "Actual locale"
+        locale
+        echo "Actual numeric settings"
+        locale -c -k LC_NUMERIC
+        echo "LANG Variable"
+        echo "$LANG"
+        echo "LocaleCtl"
+        localectl status
+        echo "Printing decimal"
+        printf "%'.3f\n" 123123,123
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
