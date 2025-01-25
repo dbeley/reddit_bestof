@@ -125,7 +125,7 @@ def get_env_post(
     number_total_posts = len(df_posts)
     number_total_comments = len(df_comments)
     number_unique_users = len(
-        pd.unique(df_posts["author"].append(df_comments["author"], ignore_index=True))
+        pd.unique(df_posts["author"]._append(df_comments["author"], ignore_index=True))
     )
     best_post = utils.get_best_post(df_posts)
     commented_post = utils.get_commented_post(df_posts)
