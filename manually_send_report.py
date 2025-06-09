@@ -1,11 +1,13 @@
 """Create and send Reddit BestOf reports."""
+
+import argparse
+import locale
 import logging
 import time
-import argparse
-import praw
-import locale
 from datetime import datetime
 from pathlib import Path
+
+import praw
 
 logger = logging.getLogger()
 logging.getLogger("praw").setLevel(logging.WARNING)
@@ -22,7 +24,7 @@ def redditconnect(config_section: str):
 def read_file(file: str) -> str:
     if not Path(file).is_file():
         raise ValueError(f"File {file} does not exist.")
-    with open(file, "r") as f:
+    with open(file) as f:
         content = f.read()
     return content
 
@@ -30,7 +32,7 @@ def read_file(file: str) -> str:
 def format_title(formatted_message: str, filename: str) -> str:
     """Function only useful for /r/BestOfFrance2."""
     day = Path(filename).stem.split("_")[0]
-    y, m, d = [int(x) for x in day.split("-", 3)]
+    y, m, d = (int(x) for x in day.split("-", 3))
     date = datetime(y, m, d).strftime("%A %d %b %Y")
     best_comment = formatted_message.split("##")[3].split("[")[1].split("]")[0]
     formatted_title = f"[BestOf] du {date} : {best_comment}"

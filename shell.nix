@@ -10,6 +10,7 @@ in pkgs.mkShell {
     pythonPackages.pandas
     pythonPackages.tqdm
     pythonPackages.pytest
+    pre-commit
   ];
 
 }

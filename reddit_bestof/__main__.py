@@ -1,19 +1,21 @@
 """Create and send Reddit BestOf reports."""
 
-import logging
-import time
 import argparse
 import json
 import locale
-import requests
-import praw
-import pandas as pd
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
 from string import Template
-from tqdm import tqdm
 from typing import Tuple
-from . import utils, date_utils
+
+import pandas as pd
+import praw
+import requests
+from tqdm import tqdm
+
+from . import date_utils, utils
 
 logger = logging.getLogger()
 logging.getLogger("praw").setLevel(logging.WARNING)
@@ -157,7 +159,7 @@ def get_env_post(
 
 
 def read_template(file: str) -> Template:
-    with open(file, "r") as f:
+    with open(file) as f:
         content = f.read()
     return Template(content)
 
@@ -166,13 +168,11 @@ def notify_winners(reddit: praw.Reddit, message: str, env_post: dict):
     logger.warning(
         "Notifying winners. Don't do this if you're just testing the script!"
     )
-    winning_comments = set(
-        [
+    winning_comments = {
             env_post["best_comment_id"],
             env_post["worst_comment_id"],
             env_post["discussed_comment_id"],
-        ]
-    )
+    }
     for i in winning_comments:
         try:
             comment = reddit.comment(i)

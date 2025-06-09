@@ -1,7 +1,8 @@
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-from typing import Tuple
 import locale
+from datetime import datetime, timedelta
+from typing import Tuple
+
+from dateutil.relativedelta import relativedelta
 
 
 def get_timestamp_range(value: str) -> Tuple[str, int, int]:
@@ -12,7 +13,7 @@ def get_timestamp_range(value: str) -> Tuple[str, int, int]:
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
     # TODO better timezone handling
     # needs to add 2 hours in order to have timestamp equivalent to the FR timezone.
-    y, m, d = [int(x) for x in value.split("-", 3)]
+    y, m, d = (int(x) for x in value.split("-", 3))
     max_datetime = datetime(y, m, d, 23, 0)
     min_datetime = max_datetime - timedelta(hours=24)
     formatted_date = f"du {datetime(y, m, d).strftime('%A %d %b %Y')}"

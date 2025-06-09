@@ -1,9 +1,10 @@
 import logging
-import string
 import re
-import praw
-import pandas as pd
+import string
 from collections import Counter
+
+import pandas as pd
+import praw
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +207,7 @@ def get_capslock(df_comments: pd.DataFrame) -> dict[str, str]:
     subset = df_comments
     # replace punctuation with space so they don't count as characters in words
     subset["body2"] = subset["body"].str.replace(
-        "[{}]".format(string.punctuation), " ", regex=True
+        f"[{string.punctuation}]", " ", regex=True
     )
     subset["capslock"] = subset["body2"].apply(
         lambda row: sum([len(x) for x in row.split() if x.isupper()])
@@ -235,15 +236,17 @@ def get_indecision(df_comments: pd.DataFrame) -> dict[str, str]:
         .str.replace(r"\.+", ".", regex=True)
     )
     subset["question"] = subset["body2"].apply(
-        lambda row: len(
-            [
-                x
-                for x in row.rsplit("?", 1)[0].split("?")
-                if (x and bool(re.search(r"\w", x)))
-            ]
+        lambda row: (
+            len(
+                [
+                    x
+                    for x in row.rsplit("?", 1)[0].split("?")
+                    if (x and bool(re.search(r"\w", x)))
+                ]
+            )
+            if "?" in row
+            else 0
         )
-        if "?" in row
-        else 0
     )
     subset2 = subset.groupby("author").sum()["question"]
     return {
