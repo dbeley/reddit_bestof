@@ -1,4 +1,5 @@
 """Create and send Reddit BestOf reports."""
+
 import logging
 import time
 import argparse
@@ -18,37 +19,6 @@ logger = logging.getLogger()
 logging.getLogger("praw").setLevel(logging.WARNING)
 START_TIME = time.time()
 MAX_POSTS_TO_EXTRACT = 3000
-
-
-def get_pushshift_data(sub: str, min_timestamp: int, max_timestamp: int) -> list:
-    url = f"https://api.pushshift.io/reddit/search/submission?&size=1000&subreddit={sub}&after={min_timestamp}&before={max_timestamp}"
-    i = 0
-    while True:
-        i += 1
-        time.sleep(3)
-        req = requests.get(url)
-        if req.status_code != 502 or i > 5:
-            break
-    try:
-        data = json.loads(req.text)
-    except Exception as e:
-        logger.error(e)
-    return data["data"]
-
-
-def get_pushshift_ids(
-    sub: str, min_timestamp: int, max_timestamp: int, test: bool
-) -> list:
-    list_ids = []
-    ids = get_pushshift_data(sub, min_timestamp, max_timestamp)
-    while len(ids) > 0:
-        for i in ids:
-            list_ids.append(i["id"])
-        logger.debug(f"New min timestamp = {ids[-1]['created_utc']}.")
-        ids = get_pushshift_data(sub, ids[-1]["created_utc"], max_timestamp)
-        if test:
-            break
-    return list_ids
 
 
 def get_reddit_ids(
@@ -106,12 +76,6 @@ def get_data(reddit, post_ids: list) -> Tuple[list, list]:
                         }
                     )
     return posts, comments
-
-
-def redditconnect(config_section: str) -> praw.Reddit:
-    user_agent = "python:script:reddit_bestof"
-    reddit = praw.Reddit(config_section, user_agent=user_agent)
-    return reddit
 
 
 def get_env_post(
@@ -221,31 +185,10 @@ def notify_winners(reddit: praw.Reddit, message: str, env_post: dict):
 def main():
     args = parse_args()
 
-    if args.timeframe == "day":
-        report_date = datetime.now().strftime("%Y-%m-%d") if not args.day else args.day
-        formatted_date, min_timestamp, max_timestamp = date_utils.get_timestamp_range(
-            args.timeframe, report_date
-        )
-    elif args.timeframe == "month":
-        logger.warning(
-            f"Be aware that creating a monthly report for a very large subreddit will take a long time or simply won't work."
-        )
-        report_date = datetime.now().strftime("%Y-%m") if not args.month else args.month
-        formatted_date, min_timestamp, max_timestamp = date_utils.get_timestamp_range(
-            args.timeframe, report_date
-        )
-    elif args.timeframe == "year":
-        logger.warning(
-            f"Be aware that creating a yearly report for a very large subreddit will take a very long time or simply won't work."
-        )
-        report_date = datetime.now().strftime("%Y") if not args.year else args.year
-        formatted_date, min_timestamp, max_timestamp = date_utils.get_timestamp_range(
-            args.timeframe, report_date
-        )
-    else:
-        raise ValueError(
-            f"Value {args.timeframe} for timeframe is invalid. Accepted values are day, month, year."
-        )
+    report_date = datetime.now().strftime("%Y-%m-%d")
+    formatted_date, min_timestamp, max_timestamp = date_utils.get_timestamp_range(
+        report_date
+    )
     logger.info(
         f"Creating report for subreddit {args.subreddit} and day {report_date}."
     )
@@ -254,7 +197,7 @@ def main():
 
     if not args.post_subreddit and not args.no_posting:
         raise ValueError(
-            "You need to set -p/--post_subreddit. You can disable posting with --no-posting."
+            "You need to set -p/--post_subreddit. You can disable posting with --no_posting."
         )
     if not Path(args.template_file).is_file():
         raise FileNotFoundError(f"Template {args.template_file} does not exist.")
@@ -277,21 +220,18 @@ def main():
                     f"Template {args.template_file_message} does not exist."
                 )
 
-    reddit = redditconnect("bot")
+    if Path.cwd() / "praw.ini":
+        reddit = praw.Reddit("bot", user_agent="python:script:reddit_bestof")
+    else:
+        reddit = praw.Reddit(user_agent="python:script:reddit_bestof")
+
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
     # pd.to_string() uses this option to truncate its output
     pd.options.display.max_colwidth = None
 
-    # If a specific day is set or the timeframe is a month or a year,
-    # extract ids with pushshift, otherwise with praw
-    if args.day or args.timeframe in ["month", "year"]:
-        post_ids = get_pushshift_ids(
-            args.subreddit, min_timestamp, max_timestamp, args.test
-        )
-    else:
-        post_ids = get_reddit_ids(
-            reddit, args.subreddit, min_timestamp, max_timestamp, args.test
-        )
+    post_ids = get_reddit_ids(
+        reddit, args.subreddit, min_timestamp, max_timestamp, args.test
+    )
 
     if len(post_ids) == 0:
         raise ValueError(
@@ -379,29 +319,7 @@ def parse_args():
     parser.add_argument(
         "-m",
         "--template_file_message",
-        help="Template file containing the message for the winner's notification (required if --notify-winners is set)",
-        type=str,
-    )
-    parser.add_argument(
-        "--timeframe",
-        help="timeframe (day, month, year. default: day)",
-        type=str,
-        default="day",
-    )
-    parser.add_argument(
-        "-d",
-        "--day",
-        help="Report day in format YYYY-MM-DD (optional, active when timeframe is day, if not set: current day)",
-        type=str,
-    )
-    parser.add_argument(
-        "--month",
-        help="Report month in format YYYY-MM (optional, active when timeframe is month, if not set: current month)",
-        type=str,
-    )
-    parser.add_argument(
-        "--year",
-        help="Report year in format YYYY (optional, active when timeframe is year, if not set: current year)",
+        help="Template file containing the message for the winner's notification (required if --notify_winners is set)",
         type=str,
     )
     parser.add_argument(

@@ -112,7 +112,7 @@ def get_discussed_comment(
     subset = df_comments[df_comments.parent.str.startswith("t1_")][
         "parent"
     ].value_counts()
-    discussed_comment_answers = subset[0]
+    discussed_comment_answers = subset.iloc[0]
     discussed_parent_id = subset.idxmax().split("_")[-1]
     discussed_comment = df_comments[df_comments["id"] == discussed_parent_id]
     if not discussed_comment.empty:
@@ -146,6 +146,7 @@ def get_amoureux(df_comments: pd.DataFrame) -> dict[str, str]:
     """Two users that interacted with each other the most."""
     # filter comments answering to another comment
     subset = df_comments[df_comments.parent.str.startswith("t1_")]
+    subset = subset.copy()
     subset.loc[:, "parent_id"] = subset.parent.str.split("_").str[-1]
     subset2 = subset.set_index("id").join(subset.set_index("parent_id"), rsuffix="_new")
     subset3 = (
@@ -153,7 +154,7 @@ def get_amoureux(df_comments: pd.DataFrame) -> dict[str, str]:
         .apply(Counter, axis="columns")
         .value_counts()
     )
-    score = subset3[0]
+    score = subset3.iloc[0]
     authors = [x for x, y in subset3.index[0].items()]
     return {
         "amoureux_author1": str(authors[0]),
@@ -184,7 +185,7 @@ def get_poc(df_comments: pd.DataFrame) -> dict[str, str]:
     poc = df_comments["author"].value_counts()
     return {
         "poc_author": str(poc.idxmax()),
-        "poc_score": poc[0],
+        "poc_score": poc.iloc[0],
     }
 
 

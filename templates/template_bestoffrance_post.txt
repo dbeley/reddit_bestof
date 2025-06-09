@@ -46,4 +46,4 @@ par ${discussed_comment_author} avec **${discussed_comment_answers} réponses**
 * Karma-Krach : ${krach_author} avec **${krach_score}** points!
 
 ---
-^^[reddit_bestof](https://www.github.com/dbeley/reddit_bestof) ^^maintenu ^^par ^^[/u/bloub-bloub](https://www.reddit.com/user/bloub-bloub), ^^idée ^^originale ^^de ^^[/u/mudpizza](https://www.reddit.com/user/mudpizza)
+^^[reddit_bestof](https://www.github.com/dbeley/reddit_bestof)

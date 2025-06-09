@@ -68,7 +68,7 @@ optional arguments:
                         (required)
   -m TEMPLATE_FILE_MESSAGE, --template_file_message TEMPLATE_FILE_MESSAGE
                         Template file containing the message for the winner's
-                        notification (required if --notify-winners is set)
+                        notification (required if --notify_winners is set)
   -d DAY, --day DAY     Report day in format YYYY-MM-DD (optional, if not set:
                         current day)
   -p POST_SUBREDDIT, --post_subreddit POST_SUBREDDIT
